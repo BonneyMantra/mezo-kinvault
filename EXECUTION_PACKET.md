@@ -34,21 +34,23 @@ Then show early release rejection, timeout, beneficiary release, and the receipt
 
 ## Links
 
-- Repo: blocked until primary submitter is selected.
+- Repo: `https://github.com/gabrielantonyxaviour/mezo-kinvault`
 - Local demo URL: `http://localhost:5317/`
-- Demo URL: pending public deploy.
+- Public demo URL: `https://mezo-kinvault.vercel.app`
 - Mezo docs: `https://mezo.org/docs/developers/getting-started/`
 - Hackathon: `https://mezo.org/blog/the-mezo-hackathon-is-back/`
+- Submission portal: `https://www.competehub.dev/en/competitions/encodeclub_mezo-hackathon-building-bitcoins-future`
 
 ## Final Checklist
 
-- [ ] Team selected.
-- [ ] Public repo created under selected owner.
-- [x] Contract tests pass.
+- [x] Team selected. (Gabriel — autonomous default 2026-05-24)
+- [x] Public repo created under selected owner. (gabrielantonyxaviour/mezo-kinvault)
+- [x] Contract tests pass. (5/5)
 - [x] Local proof generated.
 - [x] Mezo RPC chain ID verified.
-- [ ] Mezo Testnet deployment attempted or blocker recorded.
+- [ ] Mezo Testnet deployment attempted or blocker recorded. (BLOCKED — zero testnet BTC)
 - [x] UI built and tested locally.
 - [x] Polish workflow blocker reported.
-- [ ] Submission portal inspected under selected profile.
-- [ ] Builder report written.
+- [x] Frontend deployed publicly. (https://mezo-kinvault.vercel.app)
+- [ ] Submission portal submitted (needs Gabriel login to Encode Club).
+- [x] Builder/completion report written.
