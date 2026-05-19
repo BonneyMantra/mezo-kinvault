@@ -1,0 +1,29 @@
+{
+  "product": "KinVault",
+  "proofSource": "local fixture",
+  "network": "Anvil local fixture",
+  "chainId": 31337,
+  "mezoTarget": {
+    "chainId": 31611,
+    "rpc": "https://rpc.test.mezo.org",
+    "explorer": "https://explorer.test.mezo.org",
+    "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503"
+  },
+  "status": "fixture-proven",
+  "owner": "0x00000000000000000000000000000000000A11cE",
+  "beneficiary": "0x0000000000000000000000000000000000000B0B",
+  "vault": "deploys in Foundry test runtime",
+  "asset": "MockMUSD",
+  "amount": "12500.00 MUSD",
+  "heartbeatIntervalSeconds": 60,
+  "events": [
+    "Heartbeat(owner, at)",
+    "VaultFunded(owner, amount, totalDeposited)",
+    "BeneficiaryReleased(beneficiary, amount, releasedAt)"
+  ],
+  "verifiedBy": "forge test -vv",
+  "notes": [
+    "This artifact is intentionally labeled local fixture because no primary submitter/profile wallet has been selected.",
+    "The same KinVault contract can be deployed to Mezo Testnet with script/DeployMezo.s.sol after MEZO_PRIVATE_KEY and MEZO_BENEFICIARY are supplied through environment variables."
+  ]
+}

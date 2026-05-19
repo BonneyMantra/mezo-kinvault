@@ -1,0 +1,20 @@
+node_modules/
+dist/
+out/
+cache/
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts
+.DS_Store
+.env
+.env.*
+!.env.example
+
+# Session artifacts
+logs/
+.Codex/
+.claude/
+outputs/*.png
+outputs/playwright-report/
+outputs/*.log
+outputs/*.last-message
