@@ -1,0 +1,14 @@
+{
+  "network": "mezo-testnet",
+  "chainId": 31611,
+  "contractAddress": "0x229869949693f1467b8b43d2907bDAE3C58E3047",
+  "txHash": "0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965",
+  "blockNumber": 13257641,
+  "explorerUrl": "https://explorer.test.mezo.org/tx/0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965",
+  "contractExplorerUrl": "https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047",
+  "owner": "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
+  "beneficiary": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
+  "asset": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
+  "heartbeatInterval": 60,
+  "deployedAt": "2026-05-25T03:44:00Z"
+}

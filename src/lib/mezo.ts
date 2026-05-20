@@ -3,14 +3,17 @@ import { getConfig, mezoTestnet } from "@mezo-org/passport";
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 const placeholderProjectId = "00000000000000000000000000000000";
 const configuredProjectId =
-  walletConnectProjectId && walletConnectProjectId !== placeholderProjectId ? walletConnectProjectId : null;
+  walletConnectProjectId && walletConnectProjectId !== placeholderProjectId
+    ? walletConnectProjectId
+    : null;
 
 export const isPassportConfigured = Boolean(configuredProjectId);
 
 export const mezoPassportConfig = configuredProjectId
   ? getConfig({
       appName: "KinVault",
-      appDescription: "Heartbeat-based beneficiary release for Bitcoin-backed MUSD on Mezo.",
+      appDescription:
+        "Heartbeat-based beneficiary release for Bitcoin-backed MUSD on Mezo.",
       mezoNetwork: "testnet",
       walletConnectProjectId: configuredProjectId,
     })

@@ -27,16 +27,16 @@ export type KinVaultProof = {
 
 export const kinVaultProof: KinVaultProof = {
   product: "KinVault",
-  proofSource: "local fixture",
-  network: "Anvil local fixture",
-  chainId: 31337,
-  owner: "0x00000000000000000000000000000000000A11cE",
-  beneficiary: "0x0000000000000000000000000000000000000B0B",
-  vault: "deploys in Foundry test runtime",
-  asset: "MockMUSD",
-  amount: "12,500.00 MUSD",
+  proofSource: "mezo testnet",
+  network: "Mezo Testnet",
+  chainId: 31611,
+  owner: "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
+  beneficiary: "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
+  vault: "0x229869949693f1467b8b43d2907bDAE3C58E3047",
+  asset: "MUSD",
+  amount: "0.00 MUSD",
   heartbeatIntervalSeconds: 60,
-  verifiedBy: "forge test -vv",
+  verifiedBy: "forge script DeployMezo.s.sol --broadcast --legacy",
   mezoTarget: {
     chainId: 31611,
     rpc: "https://rpc.test.mezo.org",
@@ -47,7 +47,8 @@ export const kinVaultProof: KinVaultProof = {
     {
       label: "Heartbeat",
       status: "complete",
-      detail: "Owner liveness timestamp initializes and can be refreshed before timeout.",
+      detail:
+        "Owner liveness timestamp initializes and can be refreshed before timeout.",
     },
     {
       label: "VaultFunded",
@@ -57,17 +58,19 @@ export const kinVaultProof: KinVaultProof = {
     {
       label: "EarlyReleaseRejected",
       status: "complete",
-      detail: "Beneficiary release reverts while heartbeat window is still active.",
+      detail:
+        "Beneficiary release reverts while heartbeat window is still active.",
     },
     {
       label: "BeneficiaryReleased",
       status: "complete",
-      detail: "Beneficiary receives the full reserve after the missed heartbeat.",
+      detail:
+        "Beneficiary receives the full reserve after the missed heartbeat.",
     },
     {
       label: "MezoDeployment",
-      status: "blocked",
-      detail: "Blocked on selected submitter wallet, testnet BTC gas, and testnet MUSD.",
+      status: "complete",
+      detail: "Deployed to Mezo Testnet at 0x2298...3047. Tx: 0x41f2...d965.",
     },
   ],
 };
