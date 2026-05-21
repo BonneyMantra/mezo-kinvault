@@ -18,9 +18,11 @@ A heartbeat-based beneficiary release vault for Bitcoin-backed MUSD.
 Not a legal will. An operational fallback for Bitcoin-backed money.
 
 Solidity contract • Foundry tests (5/5 ✅) • Vite/React cockpit
+Deployed on Mezo Testnet ⛓️
 
 🔗 https://mezo-kinvault.vercel.app
 📦 https://github.com/gabrielantonyxaviour/mezo-kinvault
+🔍 https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
 
 #Mezo #Bitcoin #DeFi #Hackathon
 ```
@@ -75,4 +77,6 @@ Not a legal will. An operational fallback. #Mezo #Bitcoin #DeFi
 - Tag `@mezo_btc` or `@mezomoney` — verify the correct Mezo X handle before posting.
 - Add Mezo hackathon hashtag if the official one is announced.
 - The demo URL is live: https://mezo-kinvault.vercel.app (shows auth-blocked state without WalletConnect project ID, but shows the cockpit UI clearly).
+- Contract deployed on Mezo Testnet: `0x229869949693f1467b8b43d2907bDAE3C58E3047`
+- Explorer: https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
 - Post after submitting the form, not before (to avoid attention before submission).
