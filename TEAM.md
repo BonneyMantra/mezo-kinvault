@@ -1,21 +1,22 @@
 # Team And Ownership
 
-Status: **Gabriel — autonomous default (2026-05-24)**
+Status: **Bonney (BonneyMantra) — mid-flight reassignment (2026-05-25)**
 
-Previous status was BLOCKED because no primary submitter was selected. The autonomous completion session defaulted to Gabriel per explicit session instructions: "TEAM was BLOCKED — DEFAULT to Gabriel (update TEAM.md as first action, citing autonomous default)."
+Encode Club enforces one-project-per-account. Gabriel's account is reserved for another submission, so primary ownership is reassigned to Bonney.
 
 ## Primary Submitter
 
-- Person: **Gabriel Antony Xavier**
-- Chrome profile directory: `Default`
-- Chrome profile display name: `Gabriel`
-- Email: `gabrielantony56@gmail.com`
-- GitHub: `gabrielantonyxaviour`
+- Person: **Bonney**
+- Chrome profile directory: `Profile 2`
+- Chrome profile display name: `Hackathon - Bonney`
+- Email: `1inchunitedefi@gmail.com`
+- GitHub: `BonneyMantra`
 - Ownership role: final hackathon submitter, GitHub repo owner, submission portal owner.
 
-## Supporting Personas
+## Co-Members
 
-None assigned.
+- **Gabriel Antony Xavier** — `gabrielantonyxaviour` — `gabrielantony56@gmail.com` (Chrome `Default`)
+- **KaizokuJoel** — display only — `loganfernando69@gmail.com` (Chrome `Profile 5`)
 
 ## Registry Candidates (original list)
 

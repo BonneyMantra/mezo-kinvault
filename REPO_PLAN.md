@@ -42,8 +42,9 @@ After creation:
 
 ## Current State
 
-- Public repo: `https://github.com/gabrielantonyxaviour/mezo-kinvault`
-- Owner: `gabrielantonyxaviour` (Gabriel — autonomous default)
-- Branch: `main`, commit `9079dd5`
+- Public repo: `https://github.com/BonneyMantra/mezo-kinvault`
+- Owner: `BonneyMantra` (Bonney — mid-flight reassignment 2026-05-25)
+- Previous repo (Gabriel): `https://github.com/gabrielantonyxaviour/mezo-kinvault` (left as-is, not used for submission)
+- Branch: `main`
 - Frontend deploy: `https://mezo-kinvault.vercel.app` (Vercel, rax-tech org)
-- Mezo contract deploy: BLOCKED — zero testnet BTC on both deployer wallets.
+- Mezo contract: `0x229869949693f1467b8b43d2907bDAE3C58E3047` on chain 31611

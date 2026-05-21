@@ -31,7 +31,7 @@ npm run check:mezo
 npm run test:e2e
 ```
 
-The current proof is intentionally labeled `local fixture` because no primary submitter/profile wallet was assigned for Mezo Testnet funding. Without `VITE_WALLETCONNECT_PROJECT_ID`, the local UI disables the Passport button instead of pretending WalletConnect is configured.
+Contract is deployed on Mezo Testnet at `0x229869949693f1467b8b43d2907bDAE3C58E3047`. Without `VITE_WALLETCONNECT_PROJECT_ID`, the UI disables the Passport button instead of pretending WalletConnect is configured.
 
 ## Mezo Deployment
 
@@ -52,8 +52,9 @@ forge script script/DeployMezo.s.sol --rpc-url "$MEZO_RPC_URL" --broadcast
 
 Do not commit private keys or wallet secrets.
 
-## Readiness Boundary
+## Deployment
 
-Current readiness status on 2026-05-22 IST: `auth-blocked`.
-
-Local E2E, contract tests, build, and read-only Mezo RPC/MUSD metadata checks pass. Real Passport wallet connection, signature, Mezo Testnet deployment, MUSD transfer, and explorer proof remain blocked until a selected submitter wallet/profile, WalletConnect project id, testnet BTC, and MUSD are available.
+- **Contract:** `0x229869949693f1467b8b43d2907bDAE3C58E3047` on Mezo Testnet (chain 31611)
+- **Tx:** `0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965`
+- **Explorer:** https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
+- **Frontend:** https://mezo-kinvault.vercel.app

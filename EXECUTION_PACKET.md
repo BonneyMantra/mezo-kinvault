@@ -34,7 +34,7 @@ Then show early release rejection, timeout, beneficiary release, and the receipt
 
 ## Links
 
-- Repo: `https://github.com/gabrielantonyxaviour/mezo-kinvault`
+- Repo: `https://github.com/BonneyMantra/mezo-kinvault`
 - Local demo URL: `http://localhost:5317/`
 - Public demo URL: `https://mezo-kinvault.vercel.app`
 - Mezo docs: `https://mezo.org/docs/developers/getting-started/`
@@ -44,7 +44,7 @@ Then show early release rejection, timeout, beneficiary release, and the receipt
 ## Final Checklist
 
 - [x] Team selected. (Gabriel — autonomous default 2026-05-24)
-- [x] Public repo created under selected owner. (gabrielantonyxaviour/mezo-kinvault)
+- [x] Public repo created under selected owner. (BonneyMantra/mezo-kinvault)
 - [x] Contract tests pass. (5/5)
 - [x] Local proof generated.
 - [x] Mezo RPC chain ID verified.
