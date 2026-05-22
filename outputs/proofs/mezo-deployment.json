@@ -1,9 +1,10 @@
 {
-  "asset": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
-  "beneficiary": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
+  "borrowerOps": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
   "chainId": 31611,
   "heartbeatInterval": 60,
+  "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
   "network": "mezo-testnet",
   "owner": "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
-  "vault": "0x229869949693f1467b8b43d2907bDAE3C58E3047"
+  "priceFeed": "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
+  "vault": "0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb"
 }

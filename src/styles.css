@@ -53,7 +53,12 @@ button {
   min-height: 100vh;
   overflow: hidden;
   background:
-    linear-gradient(90deg, rgba(196, 127, 69, 0.10), transparent 32%, rgba(127, 168, 201, 0.08)),
+    linear-gradient(
+      90deg,
+      rgba(196, 127, 69, 0.1),
+      transparent 32%,
+      rgba(127, 168, 201, 0.08)
+    ),
     linear-gradient(180deg, #0b0d10, #111417 48%, #08090b);
 }
 
@@ -74,8 +79,20 @@ button {
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(8, 9, 11, 0.44), rgba(8, 9, 11, 0.88)),
-    repeating-linear-gradient(90deg, rgba(247, 241, 228, 0.05) 0, rgba(247, 241, 228, 0.05) 1px, transparent 1px, transparent 92px),
-    repeating-linear-gradient(0deg, rgba(247, 241, 228, 0.035) 0, rgba(247, 241, 228, 0.035) 1px, transparent 1px, transparent 92px);
+    repeating-linear-gradient(
+      90deg,
+      rgba(247, 241, 228, 0.05) 0,
+      rgba(247, 241, 228, 0.05) 1px,
+      transparent 1px,
+      transparent 92px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(247, 241, 228, 0.035) 0,
+      rgba(247, 241, 228, 0.035) 1px,
+      transparent 1px,
+      transparent 92px
+    );
 }
 
 .noiseLayer {
@@ -83,7 +100,10 @@ button {
   inset: 0;
   pointer-events: none;
   opacity: 0.18;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.24) 0.65px, transparent 0.65px);
+  background-image: radial-gradient(
+    rgba(255, 255, 255, 0.24) 0.65px,
+    transparent 0.65px
+  );
   background-size: 5px 5px;
 }
 
@@ -236,7 +256,10 @@ button {
 .heroGrid {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.12fr) minmax(320px, 0.82fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(380px, 1.12fr) minmax(
+      320px,
+      0.82fr
+    );
   gap: 14px;
   align-items: start;
 }
@@ -348,7 +371,12 @@ button {
   inset: 0;
   pointer-events: none;
   opacity: 0.4;
-  background: repeating-linear-gradient(0deg, transparent 0, transparent 23px, rgba(247, 241, 228, 0.06) 24px);
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0,
+    transparent 23px,
+    rgba(247, 241, 228, 0.06) 24px
+  );
 }
 
 .cockpitPanel.ready {
@@ -724,6 +752,178 @@ button {
     text-align: left;
     overflow-wrap: anywhere;
   }
+}
+
+/* --- Owner controls & beneficiary management --- */
+
+.vaultStats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 18px 0 14px;
+  padding: 0;
+}
+
+.vaultStats div {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.vaultStats dt {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.vaultStats dd {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--copper);
+}
+
+.ownerControls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.depositRow,
+.beneficiaryForm {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.depositRow input,
+.beneficiaryForm input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-family: inherit;
+}
+
+.depositRow input:focus,
+.beneficiaryForm input:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+
+.beneficiaryForm input:first-child {
+  flex: 2;
+}
+
+.txStatus {
+  padding: 8px 12px;
+  background: color-mix(in srgb, var(--copper) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--copper) 30%, transparent);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: var(--copper);
+  margin: 8px 0;
+}
+
+.beneficiarySection {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.beneficiarySection > strong {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.beneficiaryList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.beneficiaryList li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.benAddress {
+  flex: 1;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+
+.benBps {
+  font-weight: 600;
+  color: var(--copper);
+  min-width: 44px;
+  text-align: right;
+}
+
+.benRemove {
+  background: none;
+  border: none;
+  color: var(--red);
+  cursor: pointer;
+  padding: 2px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+
+.benRemove:hover {
+  opacity: 1;
+}
+
+.emptyNote {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.myAllocation {
+  margin-top: 14px;
+  padding: 12px;
+  background: color-mix(in srgb, var(--moss) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--moss) 30%, transparent);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.myAllocation strong {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--moss);
+}
+
+.myAllocation span {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
 }
 
 @media (prefers-reduced-motion: reduce) {

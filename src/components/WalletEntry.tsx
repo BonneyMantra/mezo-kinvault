@@ -22,13 +22,24 @@ export function WalletEntry({ passportEnabled }: WalletEntryProps) {
 
   return (
     <ConnectButton.Custom>
-      {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
+      {({
+        account,
+        chain,
+        openAccountModal,
+        openChainModal,
+        openConnectModal,
+        mounted,
+      }) => {
         const ready = mounted;
         const connected = ready && account && chain;
 
         if (!connected) {
           return (
-            <button className="iconTextButton" type="button" onClick={openConnectModal}>
+            <button
+              className="iconTextButton"
+              type="button"
+              onClick={openConnectModal}
+            >
               <WalletCards size={17} />
               Connect Passport
             </button>
@@ -37,10 +48,19 @@ export function WalletEntry({ passportEnabled }: WalletEntryProps) {
 
         return (
           <div className="walletConnected">
-            <button className="iconOnlyButton" type="button" onClick={openChainModal} aria-label="Change network">
+            <button
+              className="iconOnlyButton"
+              type="button"
+              onClick={openChainModal}
+              aria-label="Change network"
+            >
               <BadgeCheck size={17} />
             </button>
-            <button className="iconTextButton secondary" type="button" onClick={openAccountModal}>
+            <button
+              className="iconTextButton secondary"
+              type="button"
+              onClick={openAccountModal}
+            >
               {account.displayName}
             </button>
           </div>

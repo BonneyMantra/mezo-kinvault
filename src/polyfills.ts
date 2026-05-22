@@ -8,7 +8,9 @@ declare global {
   }
 }
 
-const runtimeGlobal = globalThis as typeof globalThis & { Buffer?: typeof Buffer };
+const runtimeGlobal = globalThis as typeof globalThis & {
+  Buffer?: typeof Buffer;
+};
 
 if (!runtimeGlobal.Buffer) {
   runtimeGlobal.Buffer = Buffer;
@@ -18,7 +20,9 @@ if (typeof window !== "undefined" && !window.Buffer) {
   window.Buffer = Buffer;
 }
 
-const runtimeWithProcess = globalThis as typeof globalThis & { process?: typeof process };
+const runtimeWithProcess = globalThis as typeof globalThis & {
+  process?: typeof process;
+};
 
 if (!runtimeWithProcess.process) {
   runtimeWithProcess.process = process;

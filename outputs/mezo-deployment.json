@@ -1,14 +1,22 @@
 {
+  "version": "v2-deep-integration",
   "network": "mezo-testnet",
   "chainId": 31611,
-  "contractAddress": "0x229869949693f1467b8b43d2907bDAE3C58E3047",
-  "txHash": "0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965",
-  "blockNumber": 13257641,
-  "explorerUrl": "https://explorer.test.mezo.org/tx/0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965",
-  "contractExplorerUrl": "https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047",
+  "contractAddress": "0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb",
+  "txHash": "0x44e2ea9aa50b61998790909374103efb1937c80387455c033ded7668828100b5",
+  "explorerUrl": "https://explorer.test.mezo.org/tx/0x44e2ea9aa50b61998790909374103efb1937c80387455c033ded7668828100b5",
+  "contractExplorerUrl": "https://explorer.test.mezo.org/address/0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb",
   "owner": "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
-  "beneficiary": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
-  "asset": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
+  "mezoIntegration": {
+    "borrowerOperations": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+    "priceFeed": "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
+    "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503"
+  },
+  "beneficiaries": [
+    { "address": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa", "bps": 7000 },
+    { "address": "0x000000000000000000000000000000000000dEaD", "bps": 3000 }
+  ],
+  "collateral": "0.035 BTC",
   "heartbeatInterval": 60,
-  "deployedAt": "2026-05-25T03:44:00Z"
+  "deployedAt": "2026-05-25T04:33:00Z"
 }
