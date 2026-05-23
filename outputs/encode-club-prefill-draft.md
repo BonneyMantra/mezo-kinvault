@@ -14,23 +14,30 @@ KinVault
 
 ### Short Description
 ```
-Heartbeat-based beneficiary release vault for Bitcoin-backed MUSD on Mezo.
+Inherit Bitcoin without selling it. KinVault auto-borrows MUSD against BTC collateral and distributes it to Passport-verified beneficiaries.
 ```
 
 ### Long Description
 ```
-KinVault is custody-planning infrastructure for Bitcoin holders on Mezo. An owner funds a MUSD emergency reserve, keeps it active with periodic heartbeat transactions, and a named beneficiary can release the reserve only after the heartbeat window expires.
+KinVault is custody-planning infrastructure for Bitcoin holders on Mezo. An owner deposits BTC into the vault, sets percentage-based splits for multiple beneficiaries, and maintains liveness with periodic heartbeat transactions.
 
-This solves a real problem: most Bitcoin inheritance plans fail because families don't know what to do with seed phrases. KinVault moves one narrow part onchain — an emergency MUSD reserve that can be released by a beneficiary when the owner stops signaling liveness.
+When the heartbeat expires, anyone can trigger the release: the contract calls BorrowerOperations.openTrove() to borrow MUSD against the BTC collateral at Mezo's fixed rate, then distributes the minted MUSD proportionally to each beneficiary.
 
-Built with Solidity (Foundry), Vite/React/TypeScript, and Mezo Passport. The heartbeat interval is configurable (default 60s for demo, production would use 30-day intervals). The contract supports owner deposit, heartbeat refresh, beneficiary rotation, and time-locked beneficiary release.
+Deep Mezo integration:
+- BTC collateral → MUSD trove via BorrowerOperations (Liquity fork)
+- Live BTC price from Mezo PriceFeed oracle
+- Multi-beneficiary BPS splits (basis points, summing to 100%)
+- Passport-verified beneficiary addresses
+- 10/10 Foundry tests including trove opening mock
+
+This solves a real problem: most Bitcoin inheritance plans fail because families don't know what to do with seed phrases. KinVault moves one narrow piece onchain — BTC stays whole as collateral, heirs receive usable MUSD.
 
 Not a legal will. An operational fallback for Bitcoin-backed money.
 ```
 
 ### Track
 ```
-MEZO Utilization - MEZO Track
+Bank on Bitcoin - Bitcoin Track
 ```
 
 ### GitHub Repository
@@ -50,7 +57,7 @@ https://mezo-kinvault.vercel.app
 
 ### Smart Contract Address (if asked)
 ```
-0x229869949693f1467b8b43d2907bDAE3C58E3047
+0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb
 ```
 
 ### Deployment Network
@@ -60,12 +67,12 @@ Mezo Testnet (Chain ID: 31611)
 
 ### Explorer Link (if asked)
 ```
-https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
+https://explorer.test.mezo.org/address/0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb
 ```
 
 ### Transaction Hash (if asked)
 ```
-0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965
+0x44e2ea9aa50b61998790909374103efb1937c80387455c033ded7668828100b5
 ```
 
 ---

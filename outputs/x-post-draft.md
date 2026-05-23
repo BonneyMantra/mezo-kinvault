@@ -20,7 +20,7 @@ Deployed on Mezo Testnet ⛓️
 
 🔗 https://mezo-kinvault.vercel.app
 📦 https://github.com/BonneyMantra/mezo-kinvault
-🔍 https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
+🔍 https://explorer.test.mezo.org/address/0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb
 
 #Mezo #Bitcoin #DeFi #Hackathon
 ```
@@ -78,6 +78,6 @@ Contract: explorer.test.mezo.org/address/0x2298…3047
 
 - DO NOT post until after Encode Club submission is complete.
 - Verify Mezo's official X handle before posting (could be @MezoNetwork, @mezo_org, or @mezo_btc).
-- Contract: `0x229869949693f1467b8b43d2907bDAE3C58E3047` on Mezo Testnet
-- Explorer: https://explorer.test.mezo.org/address/0x229869949693f1467b8b43d2907bDAE3C58E3047
+- Contract: `0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb` on Mezo Testnet
+- Explorer: https://explorer.test.mezo.org/address/0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb
 - Post after submission, not before.
