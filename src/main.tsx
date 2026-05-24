@@ -14,23 +14,19 @@ import {
 import "./styles.css";
 
 const queryClient = new QueryClient();
-const app = <App passportEnabled={isPassportConfigured} />;
+
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
 root.render(
   <React.StrictMode>
-    {mezoPassportConfig ? (
-      <WagmiProvider config={mezoPassportConfig}>
-        <QueryClientProvider client={queryClient}>
-          <RainbowKitProvider initialChain={mezoTestnet}>
-            {app}
-          </RainbowKitProvider>
-        </QueryClientProvider>
-      </WagmiProvider>
-    ) : (
-      app
-    )}
+    <WagmiProvider config={mezoPassportConfig}>
+      <QueryClientProvider client={queryClient}>
+        <RainbowKitProvider initialChain={mezoTestnet}>
+          <App passportEnabled={isPassportConfigured} />
+        </RainbowKitProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
   </React.StrictMode>,
 );

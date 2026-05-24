@@ -1,4 +1,5 @@
 import { getConfig, mezoTestnet } from "@mezo-org/passport";
+import { createConfig, http } from "wagmi";
 
 const walletConnectProjectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID;
 const placeholderProjectId = "00000000000000000000000000000000";
@@ -17,7 +18,12 @@ export const mezoPassportConfig = configuredProjectId
       mezoNetwork: "testnet",
       walletConnectProjectId: configuredProjectId,
     })
-  : null;
+  : createConfig({
+      chains: [mezoTestnet],
+      transports: {
+        [mezoTestnet.id]: http("https://rpc.test.mezo.org"),
+      },
+    });
 
 export { mezoTestnet };
 
