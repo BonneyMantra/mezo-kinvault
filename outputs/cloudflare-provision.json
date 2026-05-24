@@ -1,0 +1,9 @@
+{
+  "d1_database_id": null,
+  "d1_database_name": "mezo-kinvault-db",
+  "d1_status": "skipped — CF API token lacks D1 permissions; app is pure on-chain via wagmi, no backend DB needed",
+  "pages_project": "mezo-kinvault",
+  "pages_url": "https://mezo-kinvault.pages.dev",
+  "pages_deploy_url": "https://8afa6b36.mezo-kinvault.pages.dev",
+  "deployed_at": "2026-05-25T04:50:00Z"
+}
