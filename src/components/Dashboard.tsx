@@ -10,6 +10,7 @@ import {
   Plus,
   RotateCcw,
   ShieldCheck,
+  Users,
   Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -162,6 +163,30 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
       ? "ready"
       : "active";
 
+  const hasDeposit =
+    vault.vaultBalance !== undefined && vault.vaultBalance > 0n;
+  const hasBeneficiaries = benCount > 0;
+  const isSetupComplete =
+    hasDeposit && hasBeneficiaries && vault.totalBps === 10000n;
+  type LifecycleStage =
+    | "empty"
+    | "needsBeneficiaries"
+    | "needsDeposit"
+    | "active"
+    | "ready"
+    | "released";
+  const stage: LifecycleStage = vault.released
+    ? "released"
+    : !hasDeposit && !hasBeneficiaries
+      ? "empty"
+      : hasDeposit && !hasBeneficiaries
+        ? "needsBeneficiaries"
+        : !hasDeposit && hasBeneficiaries
+          ? "needsDeposit"
+          : scenario === "ready"
+            ? "ready"
+            : "active";
+
   const { writeContract, data: txHash } = useWriteContract();
   const { isSuccess: txConfirmed } = useWaitForTransactionReceipt({
     hash: txHash,
@@ -304,24 +329,80 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           transition={{ duration: 0.6, ease }}
         >
           <h2 className="panelTitle">Vault Status</h2>
-          <dl className="vaultStats">
-            <div>
-              <dt>BTC Locked</dt>
-              <dd>{formatBtc(vault.vaultBalance)} BTC</dd>
+
+          {stage === "empty" && isOwner && (
+            <div className="setupPrompt">
+              <div className="setupStep active">
+                <span className="setupStepNum">1</span>
+                <div>
+                  <strong>Deposit BTC collateral</strong>
+                  <p>
+                    Lock Bitcoin into your vault. This becomes the collateral
+                    backing MUSD for your beneficiaries.
+                  </p>
+                </div>
+              </div>
+              <div className="setupStep">
+                <span className="setupStepNum">2</span>
+                <div>
+                  <strong>Add beneficiaries</strong>
+                  <p>Set wallet addresses and percentage splits.</p>
+                </div>
+              </div>
+              <div className="setupStep">
+                <span className="setupStepNum">3</span>
+                <div>
+                  <strong>Vault goes live</strong>
+                  <p>
+                    Your check-in timer starts. Miss it, and beneficiaries can
+                    claim MUSD.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <dt>BTC Price</dt>
-              <dd>{formatUsd(btcPrice)}</dd>
+          )}
+
+          {stage === "needsBeneficiaries" && isOwner && (
+            <div className="setupPrompt">
+              <div className="setupStep done">
+                <CheckCircle2 size={18} />
+                <div>
+                  <strong>{formatBtc(vault.vaultBalance)} BTC deposited</strong>
+                </div>
+              </div>
+              <div className="setupStep active">
+                <span className="setupStepNum">2</span>
+                <div>
+                  <strong>Add beneficiaries</strong>
+                  <p>
+                    Add at least one beneficiary with percentage splits totaling
+                    100%.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div>
-              <dt>Est. MUSD</dt>
-              <dd>{formatMusd(estimatedMusd)}</dd>
-            </div>
-            <div>
-              <dt>Splits</dt>
-              <dd>{vault.totalBps?.toString() ?? "0"} / 10000</dd>
-            </div>
-          </dl>
+          )}
+
+          {(stage !== "empty" || !isOwner) && (
+            <dl className="vaultStats">
+              <div>
+                <dt>BTC Locked</dt>
+                <dd>{formatBtc(vault.vaultBalance)} BTC</dd>
+              </div>
+              <div>
+                <dt>BTC Price</dt>
+                <dd>{formatUsd(btcPrice)}</dd>
+              </div>
+              <div>
+                <dt>Est. MUSD</dt>
+                <dd>{formatMusd(estimatedMusd)}</dd>
+              </div>
+              <div>
+                <dt>Splits</dt>
+                <dd>{vault.totalBps?.toString() ?? "0"} / 10000</dd>
+              </div>
+            </dl>
+          )}
 
           <div className="riskPreview">
             <div className="riskHeader">
@@ -417,8 +498,22 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           transition={{ duration: 0.65, delay: 0.08, ease }}
         >
           <div className="stateHeader">
-            <span>{copy.eyebrow}</span>
-            <strong>{copy.title}</strong>
+            <span>
+              {stage === "empty" ||
+              stage === "needsBeneficiaries" ||
+              stage === "needsDeposit"
+                ? "Setting up"
+                : copy.eyebrow}
+            </span>
+            <strong>
+              {stage === "empty"
+                ? "Deposit BTC to begin"
+                : stage === "needsBeneficiaries"
+                  ? "Add beneficiaries"
+                  : stage === "needsDeposit"
+                    ? "Deposit BTC"
+                    : copy.title}
+            </strong>
           </div>
 
           <div className="timerModule">
@@ -522,7 +617,14 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           ) : benCount > 0 ? (
             <p className="emptyNote">Loading beneficiaries…</p>
           ) : (
-            <p className="emptyNote">No beneficiaries added yet.</p>
+            <div className="emptyBenPrompt">
+              <Users size={20} />
+              <strong>No beneficiaries yet</strong>
+              <p>
+                Add wallet addresses below with percentage splits (BPS). Splits
+                must total 10000 (100%).
+              </p>
+            </div>
           )}
 
           {isBeneficiary && (

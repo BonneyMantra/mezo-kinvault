@@ -727,6 +727,33 @@ button {
   letter-spacing: 0.06em;
 }
 
+.checkinNote {
+  margin: -4px auto 18px;
+  max-width: 320px;
+  padding: 11px 13px;
+  border: 1px solid rgba(196, 127, 69, 0.24);
+  border-radius: 12px;
+  background: rgba(196, 127, 69, 0.08);
+  text-align: left;
+}
+
+.checkinNote strong,
+.checkinNote span {
+  display: block;
+}
+
+.checkinNote strong {
+  color: var(--ivory);
+  font-size: 0.78rem;
+  margin-bottom: 5px;
+}
+
+.checkinNote span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.35;
+}
+
 /* --- Controls --- */
 .controlRail {
   display: flex;
@@ -835,6 +862,98 @@ button {
   font-size: 0.76rem;
   color: var(--red);
   opacity: 0.85;
+}
+
+/* --- Setup prompts (empty vault) --- */
+.setupPrompt {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.setupStep {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 14px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--line);
+  opacity: 0.5;
+  transition:
+    opacity 0.3s,
+    border-color 0.3s;
+}
+
+.setupStep.active {
+  opacity: 1;
+  border-color: var(--copper);
+  background: rgba(196, 127, 69, 0.06);
+}
+
+.setupStep.done {
+  opacity: 0.8;
+  border-color: rgba(104, 201, 146, 0.3);
+  color: var(--moss);
+}
+
+.setupStepNum {
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--copper);
+  flex-shrink: 0;
+}
+
+.setupStep.active .setupStepNum {
+  background: rgba(196, 127, 69, 0.15);
+  border-color: rgba(196, 127, 69, 0.3);
+}
+
+.setupStep strong {
+  font-size: 0.88rem;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.setupStep p {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.emptyBenPrompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+  padding: 28px 16px;
+  color: var(--muted);
+}
+
+.emptyBenPrompt svg {
+  opacity: 0.4;
+}
+
+.emptyBenPrompt strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.emptyBenPrompt p {
+  font-size: 0.8rem;
+  margin: 0;
+  max-width: 260px;
+  line-height: 1.5;
 }
 
 /* --- Owner Controls --- */
@@ -1368,9 +1487,15 @@ button {
   font-size: 1rem;
   font-variant-numeric: tabular-nums;
 }
-.healthIcr.safe { color: var(--moss); }
-.healthIcr.warn { color: #e0b15f; }
-.healthIcr.danger { color: var(--red); }
+.healthIcr.safe {
+  color: var(--moss);
+}
+.healthIcr.warn {
+  color: #e0b15f;
+}
+.healthIcr.danger {
+  color: var(--red);
+}
 .healthBar {
   position: relative;
   height: 8px;
@@ -1378,7 +1503,11 @@ button {
   background: rgba(255, 255, 255, 0.07);
   margin: 26px 0 30px;
 }
-.healthTrack { position: absolute; inset: 0; border-radius: 6px; }
+.healthTrack {
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+}
 .healthFill {
   position: absolute;
   left: 0;
@@ -1387,8 +1516,12 @@ button {
   border-radius: 6px;
   background: linear-gradient(90deg, var(--copper), var(--moss));
 }
-.healthFill.warn { background: linear-gradient(90deg, var(--copper), #e0b15f); }
-.healthFill.danger { background: linear-gradient(90deg, var(--red), #e0b15f); }
+.healthFill.warn {
+  background: linear-gradient(90deg, var(--copper), #e0b15f);
+}
+.healthFill.danger {
+  background: linear-gradient(90deg, var(--red), #e0b15f);
+}
 .healthMarker {
   position: absolute;
   top: -6px;
@@ -1417,7 +1550,11 @@ button {
   gap: 10px;
   margin: 0;
 }
-.healthStats div { display: flex; flex-direction: column; gap: 2px; }
+.healthStats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 .healthStats dt {
   font-size: 0.66rem;
   color: var(--muted);
@@ -1432,7 +1569,9 @@ button {
   color: var(--text);
   font-variant-numeric: tabular-nums;
 }
-.liqLabel { color: var(--red) !important; }
+.liqLabel {
+  color: var(--red) !important;
+}
 
 /* --- Lifecycle timeline --- */
 .lifecycle {
@@ -1471,7 +1610,9 @@ button {
   width: 1px;
   background: var(--line);
 }
-.lifecycleSteps li:last-child::before { display: none; }
+.lifecycleSteps li:last-child::before {
+  display: none;
+}
 .lifeDot {
   flex-shrink: 0;
   width: 17px;
@@ -1487,9 +1628,16 @@ button {
   background: var(--moss);
   border-color: var(--moss);
 }
-.lifecycleSteps li.pending .lifeDot { background: var(--surface); }
-.lifeLabel { font-size: 0.82rem; color: var(--text); }
-.lifecycleSteps li.pending .lifeLabel { color: var(--muted); }
+.lifecycleSteps li.pending .lifeDot {
+  background: var(--surface);
+}
+.lifeLabel {
+  font-size: 0.82rem;
+  color: var(--text);
+}
+.lifecycleSteps li.pending .lifeLabel {
+  color: var(--muted);
+}
 .lifeTs {
   margin-left: auto;
   font-size: 0.68rem;
@@ -1532,7 +1680,9 @@ button {
   font-variant-numeric: tabular-nums;
   transition: color 0.18s;
 }
-.benCardAddr:hover { color: var(--copper); }
+.benCardAddr:hover {
+  color: var(--copper);
+}
 .youTag {
   font-size: 0.6rem;
   text-transform: uppercase;
@@ -1562,7 +1712,9 @@ button {
   font-size: 0.72rem;
   color: var(--muted);
 }
-.benRehearse.done { color: var(--moss); }
+.benRehearse.done {
+  color: var(--moss);
+}
 .benAmount {
   font-size: 0.78rem;
   color: var(--text);
@@ -1575,5 +1727,80 @@ button {
 }
 
 @media (max-width: 640px) {
-  .healthStats { grid-template-columns: 1fr; gap: 8px; }
+  .healthStats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   WALLET PILL
+   ═══════════════════════════════════════════ */
+
+.walletBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 18px;
+  background: var(--copper);
+  color: var(--ink);
+  border: none;
+  border-radius: 50px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter 0.2s;
+}
+.walletBtn:hover {
+  filter: brightness(1.1);
+}
+.walletBtn:disabled {
+  opacity: 0.5;
+  cursor: default;
+  filter: none;
+}
+
+.walletPill {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-radius: 50px;
+  border: 1px solid var(--glass-border);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.walletBal {
+  padding: 7px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--copper);
+  font-variant-numeric: tabular-nums;
+  border-right: 1px solid var(--glass-border);
+  white-space: nowrap;
+}
+
+.walletAccount {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px 6px 10px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: background 0.18s;
+}
+.walletAccount:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.walletAvatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
