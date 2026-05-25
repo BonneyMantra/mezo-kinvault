@@ -75,11 +75,19 @@
     "liveBondBlocker": "Mezo MEZO faucet (faucet.test.mezo.org) is gated by Cloudflare Turnstile, which fails for browser automation. Deployer holds 0 testnet MEZO. The on-chain funding path (fundMezoBond) is implemented, unit-tested (testFundMezoBond, testKeeperRewardAndBeneficiarySplitOnRelease), and ready — it needs one human CAPTCHA solve to claim testnet MEZO, then a single fundMezoBond tx."
   },
 
+  "browserVerification": {
+    "reads": "Real Dashboard renders live on-chain reads (vault state, risk preview, beneficiaries, rehearsal status) via wagmi useReadContracts — verified in Playwright at 375/768/1440.",
+    "writes": "Browser write path proven end-to-end on a fresh ACTIVE vault (0x8F85839666aeb022b921AF01B560b9BE56569a2c): the real Dashboard Heartbeat button → wagmi useWriteContract → signed eth_sendTransaction → Mezo RPC → mined. lastHeartbeatAt advanced 1779680485→1779680713 on-chain; beneficiary rehearseClaim also confirmed. See tests/e2e/browser-write.spec.ts + tests/harness/signer.tsx.",
+    "cliAllFunctions": "Every contract write exercised live via cast on sandbox 0x8F85…9a2c: deposit, heartbeat, addBeneficiary, removeBeneficiary, rehearseClaim (all status=0x1); release proven on canonical (real trove). Guards revert correctly: HeartbeatStillActive (0x83f37778), NotOwner (0x30cd7471), NotBeneficiary (0x644d871f), InsufficientCollateral (0x3a23d825).",
+    "productionUrlNote": "On the production URL a human signs via Unisat/OKX/Xverse/WalletConnect (no injected connector to automate). The app→wagmi→chain write code path is identical to the signer-harness proof above."
+  },
+
   "verification": {
     "contracts": "forge test -vv  (19/19 pass)",
     "mezoSmoke": "node scripts/mezo-smoke.mjs  (12/12 pass)",
     "build": "npm run build",
     "e2e": "npx playwright test  (12/12 pass at 375/768/1440)",
+    "browserWrite": "npx playwright test tests/e2e/browser-write.spec.ts  (2/2 pass — live signed txs)",
     "castDeposit": "cast call 0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9 'released()(bool)' --rpc-url https://rpc.test.mezo.org  ->  true",
     "castMusdBeneficiary": "cast call 0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503 'balanceOf(address)(uint256)' 0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa --rpc-url https://rpc.test.mezo.org  ->  1724065780527165142549",
     "castTroveStatus": "cast call 0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0 'getTroveStatus(address)(uint256)' 0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9 --rpc-url https://rpc.test.mezo.org  ->  1 (active)"

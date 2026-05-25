@@ -4,11 +4,18 @@ const port = Number(process.env.E2E_PORT ?? 5321);
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // browser-write.spec.ts is an on-demand live-signing proof: it needs
+  // VITE_TEST_SIGNER_KEY + the app pointed at an ACTIVE vault. Run explicitly:
+  //   npx playwright test tests/e2e/browser-write.spec.ts
+  testIgnore: "**/browser-write.spec.ts",
   timeout: 30_000,
   expect: {
     timeout: 8_000,
   },
-  reporter: [["list"], ["html", { outputFolder: "outputs/playwright-report", open: "never" }]],
+  reporter: [
+    ["list"],
+    ["html", { outputFolder: "outputs/playwright-report", open: "never" }],
+  ],
   use: {
     baseURL: `http://127.0.0.1:${port}`,
     channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome",
