@@ -18,13 +18,14 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
   useBalance,
+  useReadContract,
   useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { shortAddress } from "../../lib/proof";
-import { KINVAULT_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
+import { KINVAULT_ABI, FACTORY_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 import {
   useKinVaultState,
   useBeneficiaries,
@@ -196,6 +197,45 @@ export function MyVaultsPage({
     writeContract(releaseSim.data.request);
   };
 
+  const { data: myVaults, refetch: refetchMyVaults } = useReadContract({
+    address: MEZO_ADDRESSES.factory,
+    abi: FACTORY_ABI,
+    functionName: "getVaultsByOwner",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
+
+  const [heartbeatInput, setHeartbeatInput] = useState("60");
+  const [createStatus, setCreateStatus] = useState("");
+
+  const { writeContract: writeFactory, data: factoryTxHash } =
+    useWriteContract();
+  const { isSuccess: factoryTxConfirmed } = useWaitForTransactionReceipt({
+    hash: factoryTxHash,
+  });
+
+  useEffect(() => {
+    if (factoryTxConfirmed) {
+      setCreateStatus("Vault created!");
+      refetchMyVaults();
+      setTimeout(() => setCreateStatus(""), 5000);
+    }
+  }, [factoryTxConfirmed]);
+
+  const doCreateVault = () => {
+    const interval = parseInt(heartbeatInput);
+    if (!interval || interval <= 0) return;
+    setCreateStatus("Creating vault...");
+    writeFactory({
+      address: MEZO_ADDRESSES.factory,
+      abi: FACTORY_ABI,
+      functionName: "createVault",
+      args: [BigInt(interval)],
+    });
+  };
+
+  const userVaults = (myVaults as `0x${string}`[]) ?? [];
+
   if (!isOwner) {
     return (
       <div className="pageContainer">
@@ -203,28 +243,92 @@ export function MyVaultsPage({
           <LockKeyhole size={20} />
           <h1>My Vaults</h1>
         </div>
+
+        {userVaults.length > 0 && (
+          <motion.div
+            className="card"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease }}
+            style={{ marginBottom: 20 }}
+          >
+            <h3 className="cardTitle">Your vaults ({userVaults.length})</h3>
+            <ol className="explorerBenList">
+              {userVaults.map((v) => (
+                <li key={v}>
+                  <span className="benAddr">{shortAddress(v)}</span>
+                  <a
+                    href={`https://explorer.test.mezo.org/address/${v}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="benPct"
+                    style={{ fontSize: "0.75rem" }}
+                  >
+                    Explorer &rarr;
+                  </a>
+                </li>
+              ))}
+            </ol>
+          </motion.div>
+        )}
+
         <motion.div
-          className="emptyPage"
+          className="card createVaultCard"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease }}
+          transition={{
+            duration: 0.5,
+            delay: userVaults.length > 0 ? 0.1 : 0,
+            ease,
+          }}
         >
-          <div className="emptyIcon">
-            <PlusCircle size={40} />
+          <div className="createVaultInner">
+            <div className="emptyIcon">
+              <PlusCircle size={36} />
+            </div>
+            <h2>Create a new vault</h2>
+            <p>
+              Deploy a KinVault contract with one click. You&rsquo;ll be the
+              owner.
+            </p>
+            <div className="createVaultForm">
+              <div className="createField">
+                <label>Check-in interval (seconds)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={heartbeatInput}
+                  onChange={(e) =>
+                    setHeartbeatInput(e.target.value.replace(/[^0-9]/g, ""))
+                  }
+                  placeholder="60"
+                />
+              </div>
+              <button
+                className="actionBtn createVaultBtn"
+                type="button"
+                onClick={doCreateVault}
+                disabled={insufficientGas || !heartbeatInput}
+              >
+                <PlusCircle size={16} /> Create Vault
+              </button>
+            </div>
+            {createStatus && <div className="txStatus">{createStatus}</div>}
+            {insufficientGas && (
+              <div className="faucetBanner" style={{ marginTop: 12 }}>
+                <Droplet size={14} />
+                <span>You need testnet BTC for gas.</span>
+                <a
+                  className="faucetBtn"
+                  href={FAUCET_URL}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Get testnet BTC
+                </a>
+              </div>
+            )}
           </div>
-          <h2>No vaults yet</h2>
-          <p>
-            You haven&rsquo;t created a vault. Deploy a KinVault contract to get
-            started.
-          </p>
-          <p className="emptyHint">
-            Vault creation requires deploying a smart contract. On testnet, use
-            the CLI:
-          </p>
-          <code className="emptyCode">
-            forge script script/DeployMezo.s.sol --rpc-url
-            https://rpc.test.mezo.org --broadcast --legacy
-          </code>
         </motion.div>
       </div>
     );

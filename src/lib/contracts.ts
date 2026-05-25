@@ -8,6 +8,7 @@ export const MEZO_ADDRESSES = {
   mezo: "0x7B7c000000000000000000000000000000000001" as `0x${string}`,
   // KinVault v4 — fresh empty vault for demo recording
   kinVault: "0xB0FC35262d8383bE97b90D01b3F5572007E7A10E" as `0x${string}`,
+  factory: "0x83B085E9F68757972279826612553D398FD24C8b" as `0x${string}`,
 } as const;
 
 export const KINVAULT_ABI = [
@@ -371,5 +372,45 @@ export const ERC20_ABI = [
     inputs: [{ type: "address", name: "account" }],
     outputs: [{ type: "uint256" }],
     stateMutability: "view",
+  },
+] as const;
+
+export const FACTORY_ABI = [
+  {
+    type: "function",
+    name: "createVault",
+    inputs: [{ type: "uint256", name: "heartbeatInterval" }],
+    outputs: [{ type: "address" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "getVaultsByOwner",
+    inputs: [{ type: "address", name: "owner" }],
+    outputs: [{ type: "address[]" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "vaultCount",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getVault",
+    inputs: [{ type: "uint256", name: "index" }],
+    outputs: [{ type: "address" }],
+    stateMutability: "view",
+  },
+  {
+    type: "event",
+    name: "VaultCreated",
+    inputs: [
+      { type: "address", name: "owner", indexed: true },
+      { type: "address", name: "vault", indexed: false },
+      { type: "uint256", name: "heartbeatInterval", indexed: false },
+    ],
   },
 ] as const;

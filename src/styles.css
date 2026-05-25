@@ -772,6 +772,84 @@ button {
   max-width: 560px;
 }
 
+/* --- Create vault card --- */
+.createVaultCard {
+  max-width: 480px;
+}
+
+.createVaultInner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 12px 0;
+}
+
+.createVaultInner h2 {
+  font-family: "Sora", sans-serif;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.createVaultInner > p {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+  max-width: 360px;
+}
+
+.createVaultForm {
+  display: flex;
+  gap: 10px;
+  align-items: flex-end;
+  margin-top: 8px;
+  width: 100%;
+  max-width: 360px;
+}
+
+.createField {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.createField label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.createField input {
+  padding: 10px 13px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: "IBM Plex Mono", monospace;
+  text-align: center;
+}
+
+.createField input:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+
+.createVaultBtn {
+  background: rgba(196, 127, 69, 0.15) !important;
+  border-color: rgba(196, 127, 69, 0.3) !important;
+  color: var(--copper) !important;
+  white-space: nowrap;
+}
+
+.createVaultBtn:hover:not(:disabled) {
+  background: rgba(196, 127, 69, 0.25) !important;
+}
+
 /* --- Onboarding modal --- */
 .onboardingOverlay {
   position: fixed;
