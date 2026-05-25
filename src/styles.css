@@ -1263,3 +1263,317 @@ button {
     grid-template-columns: 1fr;
   }
 }
+
+/* ═══════════════════════════════════════════
+   RICH DATA PANELS — activity / health / lifecycle / ben cards
+   ═══════════════════════════════════════════ */
+
+.panelTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+/* --- Activity feed --- */
+.activityPanel {
+  margin-top: 24px;
+}
+.activityList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.activityList li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  transition: background 0.18s;
+}
+.activityList li:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+.activityIcon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(196, 127, 69, 0.12);
+  border: 1px solid rgba(196, 127, 69, 0.22);
+  color: var(--copper);
+}
+.activityBody {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
+}
+.activityBody strong {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.activityBody em {
+  font-style: normal;
+  font-size: 0.74rem;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.activityMeta {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.18s;
+}
+.activityMeta:hover {
+  color: var(--copper);
+}
+
+/* --- Collateral health --- */
+.healthPanel {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.healthPanel.idle {
+  opacity: 0.7;
+}
+.healthHead {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--copper);
+  margin-bottom: 14px;
+}
+.healthIcr {
+  margin-left: auto;
+  font-size: 1rem;
+  font-variant-numeric: tabular-nums;
+}
+.healthIcr.safe { color: var(--moss); }
+.healthIcr.warn { color: #e0b15f; }
+.healthIcr.danger { color: var(--red); }
+.healthBar {
+  position: relative;
+  height: 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.07);
+  margin: 26px 0 30px;
+}
+.healthTrack { position: absolute; inset: 0; border-radius: 6px; }
+.healthFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--copper), var(--moss));
+}
+.healthFill.warn { background: linear-gradient(90deg, var(--copper), #e0b15f); }
+.healthFill.danger { background: linear-gradient(90deg, var(--red), #e0b15f); }
+.healthMarker {
+  position: absolute;
+  top: -6px;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.healthMarker i {
+  display: block;
+  width: 2px;
+  height: 20px;
+  margin: 0 auto;
+  background: rgba(247, 241, 228, 0.4);
+}
+.healthMarker small {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.6rem;
+  color: var(--muted);
+}
+.healthStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+}
+.healthStats div { display: flex; flex-direction: column; gap: 2px; }
+.healthStats dt {
+  font-size: 0.66rem;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.healthStats dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.liqLabel { color: var(--red) !important; }
+
+/* --- Lifecycle timeline --- */
+.lifecycle {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+.lifecycleHead {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+.lifecycleSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.lifecycleSteps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  padding: 7px 0;
+}
+.lifecycleSteps li::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 22px;
+  bottom: -7px;
+  width: 1px;
+  background: var(--line);
+}
+.lifecycleSteps li:last-child::before { display: none; }
+.lifeDot {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 1.5px solid var(--line);
+  color: var(--ink);
+  z-index: 1;
+}
+.lifecycleSteps li.done .lifeDot {
+  background: var(--moss);
+  border-color: var(--moss);
+}
+.lifecycleSteps li.pending .lifeDot { background: var(--surface); }
+.lifeLabel { font-size: 0.82rem; color: var(--text); }
+.lifecycleSteps li.pending .lifeLabel { color: var(--muted); }
+.lifeTs {
+  margin-left: auto;
+  font-size: 0.68rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Beneficiary cards --- */
+.benCards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.benCard {
+  padding: 12px 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+.benCard.isMe {
+  border-color: rgba(196, 127, 69, 0.4);
+  background: rgba(196, 127, 69, 0.06);
+}
+.benCardTop {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 9px;
+}
+.benCardAddr {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  transition: color 0.18s;
+}
+.benCardAddr:hover { color: var(--copper); }
+.youTag {
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--copper);
+  background: rgba(196, 127, 69, 0.15);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+.benCardPct {
+  margin-left: auto;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--copper);
+  font-variant-numeric: tabular-nums;
+}
+.benCardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.benRehearse {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.benRehearse.done { color: var(--moss); }
+.benAmount {
+  font-size: 0.78rem;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.benAmount em {
+  font-style: normal;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+@media (max-width: 640px) {
+  .healthStats { grid-template-columns: 1fr; gap: 8px; }
+}

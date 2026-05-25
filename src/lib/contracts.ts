@@ -352,4 +352,24 @@ export const TROVE_MANAGER_ABI = [
     outputs: [{ type: "uint256" }],
     stateMutability: "view",
   },
+  {
+    type: "function",
+    name: "getCurrentICR",
+    inputs: [
+      { type: "address", name: "_borrower" },
+      { type: "uint256", name: "_price" },
+    ],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+] as const;
+
+export const ERC20_ABI = [
+  {
+    type: "function",
+    name: "balanceOf",
+    inputs: [{ type: "address", name: "account" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
 ] as const;

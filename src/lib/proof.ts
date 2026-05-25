@@ -10,6 +10,7 @@ export const PROOF = {
   network: "Mezo Testnet",
   chainId: 31611,
   contract: "0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9",
+  deployBlock: 13261962n,
   deployTx:
     "0xac884951e1e194e577f440badad29818086692eff479e4afa879da20602cdfe3",
   // Live release() execution — opened MUSD trove + distributed to beneficiaries.

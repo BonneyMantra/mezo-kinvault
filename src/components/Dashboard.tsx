@@ -10,7 +10,6 @@ import {
   Plus,
   RotateCcw,
   ShieldCheck,
-  Trash2,
   Wallet,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -34,8 +33,13 @@ import {
   useMezoRiskParams,
   useBeneficiaryStatus,
 } from "../hooks/useKinVault";
+import { useActivityFeed } from "../hooks/useVaultData";
 import { useBtcPrice } from "../hooks/useBtcPrice";
 import { WalletEntry } from "./WalletEntry";
+import { ActivityFeed } from "./dashboard/ActivityFeed";
+import { LifecycleTimeline } from "./dashboard/LifecycleTimeline";
+import { CollateralHealth } from "./dashboard/CollateralHealth";
+import { BeneficiaryCards } from "./dashboard/BeneficiaryCards";
 
 const formatTokenAmount = (wei: bigint | undefined, digits = 2) => {
   if (wei === undefined) return "—";
@@ -80,6 +84,7 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   const vault = useKinVaultState();
   const risk = useMezoRiskParams();
   const benStatus = useBeneficiaryStatus(address);
+  const feed = useActivityFeed();
   const { price: btcPrice } = useBtcPrice();
 
   // Gas pre-check: block all transactions if the wallet can't cover gas.
@@ -106,9 +111,6 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   const isBeneficiary =
     address &&
     beneficiaries.some((b) => b.addr.toLowerCase() === address!.toLowerCase());
-  const myBeneficiary = beneficiaries.find(
-    (b) => address && b.addr.toLowerCase() === address.toLowerCase(),
-  );
 
   const releaseTimestamp = vault.releaseAt ? Number(vault.releaseAt) : 0;
   const secondsRemaining = useMemo(() => {
@@ -366,6 +368,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
             )}
           </div>
 
+          <CollateralHealth price={btcPrice} />
+
           {isOwner && !vault.released && (
             <div className="ownerControls">
               <div className="depositRow">
@@ -460,6 +464,13 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
             </div>
           )}
           {txStatus && <div className="txStatus">{txStatus}</div>}
+
+          <LifecycleTimeline
+            events={feed.events}
+            released={vault.released}
+            totalBps={vault.totalBps}
+            vaultBalance={vault.vaultBalance}
+          />
         </motion.div>
 
         <motion.div
@@ -473,46 +484,19 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           </h2>
 
           {beneficiaries.length > 0 ? (
-            <ol className="beneficiaryList">
-              {beneficiaries.map((b, i) => (
-                <li key={b.addr}>
-                  <span className="benAddress">{shortAddress(b.addr)}</span>
-                  <span className="benBps">{(b.bps / 100).toFixed(1)}%</span>
-                  {isOwner && !vault.released && (
-                    <button
-                      className="benRemove"
-                      type="button"
-                      onClick={() => doRemoveBeneficiary(i)}
-                      disabled={insufficientGas}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ol>
+            <BeneficiaryCards
+              beneficiaries={beneficiaries}
+              estimatedMusd={estimatedMusd}
+              released={vault.released}
+              isOwner={Boolean(isOwner)}
+              connected={address}
+              onRemove={doRemoveBeneficiary}
+              disabled={insufficientGas}
+            />
           ) : benCount > 0 ? (
             <p className="emptyNote">Loading beneficiaries…</p>
           ) : (
             <p className="emptyNote">No beneficiaries added yet.</p>
-          )}
-
-          {isBeneficiary && myBeneficiary && (
-            <div className="myAllocation">
-              <strong>Your allocation</strong>
-              <span className="allocPct">
-                {(myBeneficiary.bps / 100).toFixed(1)}%
-              </span>
-              {estimatedMusd > 0n && (
-                <span className="allocMusd">
-                  ~
-                  {formatMusd(
-                    (estimatedMusd * BigInt(myBeneficiary.bps)) / 10000n,
-                  )}{" "}
-                  MUSD
-                </span>
-              )}
-            </div>
           )}
 
           {isBeneficiary && (
@@ -574,6 +558,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           )}
         </motion.div>
       </div>
+
+      <ActivityFeed events={feed.events} isLoading={feed.isLoading} />
 
       <motion.section
         className="judgeProof"

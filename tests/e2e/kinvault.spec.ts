@@ -46,7 +46,13 @@ test("dashboard owner view shows live Mezo risk preview + judge proof", async ({
   await expect(page.getByText(/Min net debt/i)).toBeVisible();
   await expect(page.getByText(/1,?800 MUSD/)).toBeVisible();
   await expect(page.getByText(/Min collateral \(MCR\)/i)).toBeVisible();
-  await expect(page.getByText(/110%/)).toBeVisible();
+
+  // Rich data panels (all real on-chain reads).
+  await expect(page.getByText(/On-chain activity/i)).toBeVisible({
+    timeout: 15_000,
+  });
+  await expect(page.getByText("Vault lifecycle")).toBeVisible();
+  await expect(page.getByText("Collateral health")).toBeVisible();
 
   // Judge proof rail with real network + contract.
   await expect(
@@ -54,14 +60,18 @@ test("dashboard owner view shows live Mezo risk preview + judge proof", async ({
   ).toBeVisible();
   await expect(page.getByText(/Mezo Testnet \(31611\)/)).toBeVisible();
 
-  // Owner role badge. (Deposit/add controls render only while the vault is
-  // active; the live canonical vault has already been released, so we assert
-  // the role + live reads rather than the owner-only mutation controls.)
+  // Owner role badge.
   await expect(page.getByText("Owner", { exact: true })).toBeVisible();
 
   // Wait for the live beneficiary rows (70/30 split) to resolve.
   await expect(page.getByText("70.0%")).toBeVisible({ timeout: 15_000 });
   await expect(page.getByText("30.0%")).toBeVisible();
+
+  // Wait for the decoded event log to populate (feed-specific rows).
+  await expect(page.getByText(/MUSD trove opened/i)).toBeVisible({
+    timeout: 20_000,
+  });
+  await expect(page.getByText(/MUSD distributed/i).first()).toBeVisible();
 
   await page.screenshot({
     path: `outputs/v3-dashboard-owner-${testInfo.project.name}.png`,
@@ -78,9 +88,10 @@ test("dashboard beneficiary view shows rehearsal status + allocation", async ({
     timeout: 15_000,
   });
   await expect(page.getByText("Beneficiary", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Your allocation/i)).toBeVisible();
+  // Per-beneficiary card marks the connected wallet as "you" + shows received MUSD.
+  await expect(page.getByText("you", { exact: true })).toBeVisible();
   // The beneficiary rehearsed on-chain earlier → status should read Rehearsed.
-  await expect(page.getByText(/Rehearsed/i)).toBeVisible();
+  await expect(page.getByText(/Rehearsed/i).first()).toBeVisible();
 
   await page.screenshot({
     path: `outputs/v3-dashboard-beneficiary-${testInfo.project.name}.png`,
