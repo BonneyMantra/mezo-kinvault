@@ -2,8 +2,6 @@ import {
   getConfig,
   mezoTestnet,
   okxWalletMezoTestnet,
-  unisatWalletMezoTestnet,
-  xverseWalletMezoTestnet,
 } from "@mezo-org/passport";
 
 const projectId =
@@ -17,17 +15,13 @@ export const mezoPassportConfig = getConfig({
   appDescription:
     "Heartbeat-based beneficiary release for Bitcoin-backed MUSD on Mezo.",
   appUrl: "https://mezo-kinvault.vercel.app",
+  appIcon: "https://mezo-kinvault.vercel.app/logo.png",
   mezoNetwork: "testnet",
   walletConnectProjectId: projectId,
-  multiInjectedProviderDiscovery: false,
   wallets: [
     {
-      groupName: "Bitcoin",
-      wallets: [
-        okxWalletMezoTestnet,
-        unisatWalletMezoTestnet,
-        xverseWalletMezoTestnet,
-      ],
+      groupName: "Bitcoin wallets",
+      wallets: [okxWalletMezoTestnet],
     },
   ],
 });
