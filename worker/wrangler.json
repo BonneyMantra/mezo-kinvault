@@ -1,0 +1,11 @@
+{
+  "name": "kinvault-meta",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-01-01",
+  "kv_namespaces": [
+    {
+      "binding": "VAULT_META",
+      "id": "f78b76397feb4ca18c7e73574e014a67"
+    }
+  ]
+}

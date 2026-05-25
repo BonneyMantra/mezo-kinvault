@@ -2,19 +2,18 @@ import { motion } from "motion/react";
 import {
   Activity,
   CheckCircle2,
-  Coins,
   Droplet,
+  ExternalLink,
   HeartPulse,
   LockKeyhole,
   Plus,
   PlusCircle,
   RotateCcw,
-  ShieldCheck,
   Trash2,
   Users,
   Wallet,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   useAccount,
   useBalance,
@@ -26,14 +25,15 @@ import {
 import { parseEther, formatEther } from "viem";
 import { shortAddress } from "../../lib/proof";
 import { KINVAULT_ABI, FACTORY_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
-import {
-  useKinVaultState,
-  useBeneficiaries,
-  useMezoRiskParams,
-} from "../../hooks/useKinVault";
+import { useKinVaultState, useBeneficiaries } from "../../hooks/useKinVault";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
 import { CollateralHealth } from "../dashboard/CollateralHealth";
 import { BeneficiaryCards } from "../dashboard/BeneficiaryCards";
+import {
+  saveVaultMeta,
+  getVaultsByOwnerMeta,
+  type VaultMetaWithAddress,
+} from "../../lib/vaultMeta";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 const GAS_FLOOR = parseEther("0.0001");
@@ -58,6 +58,16 @@ const fmtTimer = (s: number) => {
     .padStart(2, "0")}:${(safe % 60).toString().padStart(2, "0")}`;
 };
 
+const COVER_IMAGES = [
+  "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1518546305927-5a555bb7020d?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1622630998477-20aa696ecb05?w=600&h=200&fit=crop",
+  "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=600&h=200&fit=crop",
+];
+
+type BenEntry = { address: string; bps: string };
+type CreateStep = "details" | "beneficiaries" | "deploying" | "done";
+
 export function MyVaultsPage({
   passportEnabled,
 }: {
@@ -68,164 +78,110 @@ export function MyVaultsPage({
     address,
     query: { refetchInterval: 10000 },
   });
-  const vault = useKinVaultState();
   const { price: btcPrice } = useBtcPrice();
-  const risk = useMezoRiskParams();
-  const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
-  const { beneficiaries, refetch: refetchBens } = useBeneficiaries(benCount);
 
-  const [now, setNow] = useState(() => Date.now());
-  const [depositAmount, setDepositAmount] = useState("");
-  const [newBenAddress, setNewBenAddress] = useState("");
-  const [newBenBps, setNewBenBps] = useState("");
-  const [txStatus, setTxStatus] = useState("");
-
-  useEffect(() => {
-    const t = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(t);
-  }, []);
-
-  const isOwner =
-    address &&
-    vault.owner &&
-    address.toLowerCase() === vault.owner.toLowerCase();
   const balanceLoaded = nativeBalance !== undefined;
   const insufficientGas = balanceLoaded && nativeBalance.value < GAS_FLOOR;
 
-  const heartbeatSim = useSimulateContract({
-    address: MEZO_ADDRESSES.kinVault,
-    abi: KINVAULT_ABI,
-    functionName: "heartbeat",
-    query: { enabled: !insufficientGas && !!address && !!isOwner },
-  });
-  const releaseSim = useSimulateContract({
-    address: MEZO_ADDRESSES.kinVault,
-    abi: KINVAULT_ABI,
-    functionName: "release",
-    query: { enabled: !insufficientGas && !!address },
-  });
-
-  const releaseTimestamp = vault.releaseAt ? Number(vault.releaseAt) : 0;
-  const secondsRemaining = useMemo(() => {
-    if (!releaseTimestamp || vault.released) return 0;
-    return Math.max(0, releaseTimestamp - Math.floor(now / 1000));
-  }, [releaseTimestamp, now, vault.released]);
-
-  const heartbeatSec = vault.heartbeatInterval
-    ? Number(vault.heartbeatInterval)
-    : 60;
-  const progress = vault.released
-    ? 1
-    : heartbeatSec > 0
-      ? 1 - secondsRemaining / heartbeatSec
-      : 0;
-
-  const estimatedMusd = useMemo(() => {
-    if (!vault.vaultBalance || !btcPrice || vault.vaultBalance === 0n)
-      return 0n;
-    const maxDebt = (vault.vaultBalance * btcPrice) / (13n * 10n ** 17n);
-    const gasComp = 200n * 10n ** 18n;
-    if (maxDebt <= gasComp) return 0n;
-    const rate = 10n ** 15n;
-    return ((maxDebt - gasComp) * 10n ** 18n) / (10n ** 18n + rate);
-  }, [vault.vaultBalance, btcPrice]);
-
-  const hasDeposit =
-    vault.vaultBalance !== undefined && vault.vaultBalance > 0n;
-  const hasBeneficiaries = benCount > 0;
-  const scenario: "active" | "ready" | "released" = vault.released
-    ? "released"
-    : secondsRemaining === 0 && hasDeposit
-      ? "ready"
-      : "active";
-
-  const { writeContract, data: txHash } = useWriteContract();
-  const { isSuccess: txConfirmed } = useWaitForTransactionReceipt({
-    hash: txHash,
-  });
-
-  useEffect(() => {
-    if (txConfirmed) {
-      setTxStatus("Confirmed");
-      vault.refetch();
-      refetchBens();
-      heartbeatSim.refetch();
-      releaseSim.refetch();
-      setTimeout(() => setTxStatus(""), 3000);
-    }
-  }, [txConfirmed]);
-
-  const doDeposit = () => {
-    if (!depositAmount) return;
-    setTxStatus("Depositing...");
-    writeContract({
-      address: MEZO_ADDRESSES.kinVault,
-      abi: KINVAULT_ABI,
-      functionName: "deposit",
-      value: parseEther(depositAmount),
-    });
-  };
-  const doHeartbeat = () => {
-    if (!heartbeatSim.data?.request) return;
-    setTxStatus("Recording check-in...");
-    writeContract(heartbeatSim.data.request);
-  };
-  const doAddBeneficiary = () => {
-    if (!newBenAddress || !newBenBps) return;
-    setTxStatus("Adding beneficiary...");
-    writeContract({
-      address: MEZO_ADDRESSES.kinVault,
-      abi: KINVAULT_ABI,
-      functionName: "addBeneficiary",
-      args: [newBenAddress as `0x${string}`, Number(newBenBps)],
-    });
-    setNewBenAddress("");
-    setNewBenBps("");
-  };
-  const doRemoveBeneficiary = (index: number) => {
-    setTxStatus("Removing...");
-    writeContract({
-      address: MEZO_ADDRESSES.kinVault,
-      abi: KINVAULT_ABI,
-      functionName: "removeBeneficiary",
-      args: [BigInt(index)],
-    });
-  };
-  const doRelease = () => {
-    if (!releaseSim.data?.request) return;
-    setTxStatus("Releasing — opening MUSD trove...");
-    writeContract(releaseSim.data.request);
-  };
-
-  const { data: myVaults, refetch: refetchMyVaults } = useReadContract({
+  // Factory vault list
+  const { data: myVaultsRaw, refetch: refetchMyVaults } = useReadContract({
     address: MEZO_ADDRESSES.factory,
     abi: FACTORY_ABI,
     functionName: "getVaultsByOwner",
     args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
+  const userVaults = (myVaultsRaw as `0x${string}`[]) ?? [];
 
+  // Off-chain metadata
+  const [vaultMetas, setVaultMetas] = useState<VaultMetaWithAddress[]>([]);
+  useEffect(() => {
+    if (!address) return;
+    getVaultsByOwnerMeta(address).then(setVaultMetas);
+  }, [address, userVaults.length]);
+
+  // Currently selected vault for management
+  const [selectedVault, setSelectedVault] = useState<`0x${string}` | null>(
+    null,
+  );
+
+  // Create vault flow state
+  const [creating, setCreating] = useState(false);
+  const [createStep, setCreateStep] = useState<CreateStep>("details");
+  const [vaultName, setVaultName] = useState("");
+  const [vaultDesc, setVaultDesc] = useState("");
+  const [coverImg, setCoverImg] = useState(COVER_IMAGES[0]);
   const [heartbeatInput, setHeartbeatInput] = useState("60");
+  const [pendingBens, setPendingBens] = useState<BenEntry[]>([
+    { address: "", bps: "" },
+  ]);
   const [createStatus, setCreateStatus] = useState("");
+  const [newVaultAddress, setNewVaultAddress] = useState<string | null>(null);
 
+  const addBenRow = () =>
+    setPendingBens((b) => [...b, { address: "", bps: "" }]);
+  const removeBenRow = (i: number) =>
+    setPendingBens((b) => b.filter((_, idx) => idx !== i));
+  const updateBen = (i: number, field: "address" | "bps", val: string) =>
+    setPendingBens((b) =>
+      b.map((entry, idx) => (idx === i ? { ...entry, [field]: val } : entry)),
+    );
+
+  const totalBps = pendingBens.reduce(
+    (sum, b) => sum + (parseInt(b.bps) || 0),
+    0,
+  );
+  const bensValid =
+    pendingBens.length > 0 &&
+    pendingBens.every(
+      (b) =>
+        b.address.startsWith("0x") &&
+        b.address.length === 42 &&
+        parseInt(b.bps) > 0,
+    ) &&
+    totalBps === 10000;
+
+  // Factory create tx
   const { writeContract: writeFactory, data: factoryTxHash } =
     useWriteContract();
-  const { isSuccess: factoryTxConfirmed } = useWaitForTransactionReceipt({
-    hash: factoryTxHash,
-  });
+  const { isSuccess: factoryConfirmed, data: factoryReceipt } =
+    useWaitForTransactionReceipt({ hash: factoryTxHash });
 
   useEffect(() => {
-    if (factoryTxConfirmed) {
-      setCreateStatus("Vault created!");
+    if (factoryConfirmed && factoryReceipt) {
+      // Parse VaultCreated event to get the new vault address
+      const vaultCreatedLog = factoryReceipt.logs.find(
+        (log) =>
+          log.topics[0] ===
+          "0x0b045af6aff86dd2cda5342fd0329a354dc66759ff1eda00d7ecf13a76c7fb3b",
+      );
+      let createdAddr: string | null = null;
+      if (vaultCreatedLog && vaultCreatedLog.data) {
+        createdAddr = "0x" + vaultCreatedLog.data.slice(26, 66);
+      }
+
+      if (createdAddr) {
+        setNewVaultAddress(createdAddr);
+        saveVaultMeta(createdAddr, {
+          name: vaultName,
+          description: vaultDesc,
+          coverImage: coverImg,
+          owner: address!,
+          chainId: 31611,
+        });
+      }
+
+      setCreateStep("done");
+      setCreateStatus("Vault deployed!");
       refetchMyVaults();
-      setTimeout(() => setCreateStatus(""), 5000);
     }
-  }, [factoryTxConfirmed]);
+  }, [factoryConfirmed, factoryReceipt]);
 
   const doCreateVault = () => {
     const interval = parseInt(heartbeatInput);
     if (!interval || interval <= 0) return;
-    setCreateStatus("Creating vault...");
+    setCreateStep("deploying");
+    setCreateStatus("Deploying vault contract...");
     writeFactory({
       address: MEZO_ADDRESSES.factory,
       abi: FACTORY_ABI,
@@ -234,86 +190,194 @@ export function MyVaultsPage({
     });
   };
 
-  const userVaults = (myVaults as `0x${string}`[]) ?? [];
+  // For managing a selected vault — read its state
+  const vault = useKinVaultState();
+  const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
+  const { beneficiaries, refetch: refetchBens } = useBeneficiaries(benCount);
 
-  if (!isOwner) {
+  const resetCreate = () => {
+    setCreating(false);
+    setCreateStep("details");
+    setVaultName("");
+    setVaultDesc("");
+    setCoverImg(COVER_IMAGES[0]);
+    setHeartbeatInput("60");
+    setPendingBens([{ address: "", bps: "" }]);
+    setCreateStatus("");
+    setNewVaultAddress(null);
+  };
+
+  // ─── Render: Create Flow ───
+  if (creating) {
     return (
       <div className="pageContainer">
         <div className="pageHeader">
           <LockKeyhole size={20} />
-          <h1>My Vaults</h1>
+          <h1>Create Vault</h1>
+          {createStep !== "deploying" && createStep !== "done" && (
+            <button
+              className="actionBtn"
+              type="button"
+              onClick={resetCreate}
+              style={{ marginLeft: "auto" }}
+            >
+              Cancel
+            </button>
+          )}
         </div>
 
-        {userVaults.length > 0 && (
+        {createStep === "details" && (
           <motion.div
-            className="card"
+            className="card createFormCard"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease }}
-            style={{ marginBottom: 20 }}
+            transition={{ duration: 0.4, ease }}
           >
-            <h3 className="cardTitle">Your vaults ({userVaults.length})</h3>
-            <ol className="explorerBenList">
-              {userVaults.map((v) => (
-                <li key={v}>
-                  <span className="benAddr">{shortAddress(v)}</span>
-                  <a
-                    href={`https://explorer.test.mezo.org/address/${v}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="benPct"
-                    style={{ fontSize: "0.75rem" }}
+            <h3 className="cardTitle">Vault Details</h3>
+
+            <div className="formGroup">
+              <label>Vault name</label>
+              <input
+                type="text"
+                placeholder="e.g. Family Emergency Fund"
+                value={vaultName}
+                onChange={(e) => setVaultName(e.target.value)}
+              />
+            </div>
+
+            <div className="formGroup">
+              <label>Description</label>
+              <textarea
+                placeholder="What is this vault for?"
+                value={vaultDesc}
+                onChange={(e) => setVaultDesc(e.target.value)}
+                rows={3}
+              />
+            </div>
+
+            <div className="formGroup">
+              <label>Cover image</label>
+              <div className="coverPicker">
+                {COVER_IMAGES.map((img) => (
+                  <button
+                    key={img}
+                    type="button"
+                    className={`coverOption ${coverImg === img ? "selected" : ""}`}
+                    onClick={() => setCoverImg(img)}
                   >
-                    Explorer &rarr;
-                  </a>
-                </li>
-              ))}
-            </ol>
+                    <img src={img} alt="" />
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="formGroup">
+              <label>Check-in interval (seconds)</label>
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="60"
+                value={heartbeatInput}
+                onChange={(e) =>
+                  setHeartbeatInput(e.target.value.replace(/[^0-9]/g, ""))
+                }
+              />
+              <span className="formHint">
+                Demo: 60s. Production: 2592000 (30 days).
+              </span>
+            </div>
+
+            <button
+              className="actionBtn createVaultBtn"
+              type="button"
+              disabled={!vaultName.trim() || !heartbeatInput}
+              onClick={() => setCreateStep("beneficiaries")}
+            >
+              Next: Add Beneficiaries
+            </button>
           </motion.div>
         )}
 
-        <motion.div
-          className="card createVaultCard"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{
-            duration: 0.5,
-            delay: userVaults.length > 0 ? 0.1 : 0,
-            ease,
-          }}
-        >
-          <div className="createVaultInner">
-            <div className="emptyIcon">
-              <PlusCircle size={36} />
-            </div>
-            <h2>Create a new vault</h2>
-            <p>
-              Deploy a KinVault contract with one click. You&rsquo;ll be the
-              owner.
+        {createStep === "beneficiaries" && (
+          <motion.div
+            className="card createFormCard"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease }}
+          >
+            <h3 className="cardTitle">
+              <Users size={16} /> Beneficiaries
+            </h3>
+            <p className="formDesc">
+              Add wallet addresses and percentage splits. Splits must total
+              exactly 100% (10000 BPS).
             </p>
-            <div className="createVaultForm">
-              <div className="createField">
-                <label>Check-in interval (seconds)</label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={heartbeatInput}
-                  onChange={(e) =>
-                    setHeartbeatInput(e.target.value.replace(/[^0-9]/g, ""))
-                  }
-                  placeholder="60"
-                />
-              </div>
+
+            <div className="benFormList">
+              {pendingBens.map((b, i) => (
+                <div key={i} className="benFormRow">
+                  <input
+                    type="text"
+                    placeholder="0x address"
+                    value={b.address}
+                    onChange={(e) => updateBen(i, "address", e.target.value)}
+                    className="benAddrInput"
+                  />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="BPS"
+                    value={b.bps}
+                    onChange={(e) =>
+                      updateBen(i, "bps", e.target.value.replace(/[^0-9]/g, ""))
+                    }
+                    className="benBpsInput"
+                  />
+                  <span className="benPctLabel">
+                    {b.bps ? `${(parseInt(b.bps) / 100).toFixed(1)}%` : "—"}
+                  </span>
+                  {pendingBens.length > 1 && (
+                    <button
+                      className="benRemoveBtn"
+                      type="button"
+                      onClick={() => removeBenRow(i)}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="benFormActions">
+              <button className="actionBtn" type="button" onClick={addBenRow}>
+                <Plus size={14} /> Add beneficiary
+              </button>
+              <span
+                className={`bpsTotalBadge ${totalBps === 10000 ? "valid" : totalBps > 10000 ? "over" : ""}`}
+              >
+                {totalBps} / 10000 BPS
+              </span>
+            </div>
+
+            <div className="createNavRow">
+              <button
+                className="actionBtn"
+                type="button"
+                onClick={() => setCreateStep("details")}
+              >
+                Back
+              </button>
               <button
                 className="actionBtn createVaultBtn"
                 type="button"
+                disabled={insufficientGas || !bensValid}
                 onClick={doCreateVault}
-                disabled={insufficientGas || !heartbeatInput}
               >
-                <PlusCircle size={16} /> Create Vault
+                <PlusCircle size={16} /> Deploy Vault
               </button>
             </div>
-            {createStatus && <div className="txStatus">{createStatus}</div>}
+
             {insufficientGas && (
               <div className="faucetBanner" style={{ marginTop: 12 }}>
                 <Droplet size={14} />
@@ -328,283 +392,154 @@ export function MyVaultsPage({
                 </a>
               </div>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
+
+        {createStep === "deploying" && (
+          <motion.div
+            className="card"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "48px 24px",
+              gap: 16,
+            }}
+          >
+            <HeartPulse size={32} className="spinPulse" />
+            <h3>{createStatus}</h3>
+            <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
+              Confirm the transaction in your wallet. The factory will deploy
+              your vault contract on Mezo Testnet.
+            </p>
+          </motion.div>
+        )}
+
+        {createStep === "done" && newVaultAddress && (
+          <motion.div
+            className="card"
+            initial={{ opacity: 0, scale: 0.97 }}
+            animate={{ opacity: 1, scale: 1 }}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              padding: "48px 24px",
+              gap: 16,
+              textAlign: "center",
+            }}
+          >
+            <CheckCircle2 size={40} style={{ color: "var(--moss)" }} />
+            <h2>Vault created!</h2>
+            <p style={{ color: "var(--muted)", fontSize: "0.88rem" }}>
+              <strong>{vaultName}</strong> is live on Mezo Testnet.
+            </p>
+            <code className="emptyCode">{newVaultAddress}</code>
+            <a
+              href={`https://explorer.test.mezo.org/address/${newVaultAddress}`}
+              target="_blank"
+              rel="noreferrer"
+              className="actionBtn"
+              style={{ marginTop: 8 }}
+            >
+              <ExternalLink size={14} /> View on Explorer
+            </a>
+            <button
+              className="actionBtn createVaultBtn"
+              type="button"
+              onClick={resetCreate}
+              style={{ marginTop: 4 }}
+            >
+              Done
+            </button>
+          </motion.div>
+        )}
       </div>
     );
   }
 
+  // ─── Render: Vault List ───
   return (
     <div className="pageContainer">
       <div className="pageHeader">
         <LockKeyhole size={20} />
-        <h1>My Vault</h1>
-        <span className={`statusBadge ${scenario}`}>
-          {scenario === "active"
-            ? "Active"
-            : scenario === "ready"
-              ? "Release available"
-              : "Released"}
-        </span>
+        <h1>My Vaults</h1>
+        <button
+          className="actionBtn createVaultBtn"
+          type="button"
+          onClick={() => setCreating(true)}
+          style={{ marginLeft: "auto" }}
+        >
+          <PlusCircle size={15} /> New Vault
+        </button>
       </div>
 
-      {insufficientGas && (
-        <div className="faucetBanner">
-          <Droplet size={16} />
-          <span>You need testnet BTC for gas.</span>
-          <a
-            className="faucetBtn"
-            href={FAUCET_URL}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Get testnet BTC
-          </a>
-        </div>
-      )}
-
-      <div className="vaultManageGrid">
+      {userVaults.length === 0 ? (
         <motion.div
-          className="card"
-          initial={{ opacity: 0, y: 16 }}
+          className="emptyPage"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease }}
         >
-          {!hasDeposit && !hasBeneficiaries ? (
-            <div className="setupPrompt">
-              <div className="setupStep active">
-                <span className="setupStepNum">1</span>
-                <div>
-                  <strong>Deposit BTC collateral</strong>
-                  <p>
-                    Lock Bitcoin into your vault. This becomes the collateral
-                    backing MUSD for your beneficiaries.
-                  </p>
-                </div>
-              </div>
-              <div className="setupStep">
-                <span className="setupStepNum">2</span>
-                <div>
-                  <strong>Add beneficiaries</strong>
-                  <p>Set wallet addresses and percentage splits.</p>
-                </div>
-              </div>
-              <div className="setupStep">
-                <span className="setupStepNum">3</span>
-                <div>
-                  <strong>Vault goes live</strong>
-                  <p>
-                    Your check-in timer starts. Miss it, and beneficiaries can
-                    claim MUSD.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : hasDeposit && !hasBeneficiaries ? (
-            <div className="setupPrompt">
-              <div className="setupStep done">
-                <CheckCircle2 size={18} />
-                <div>
-                  <strong>{fmtBtc(vault.vaultBalance)} BTC deposited</strong>
-                </div>
-              </div>
-              <div className="setupStep active">
-                <span className="setupStepNum">2</span>
-                <div>
-                  <strong>Add beneficiaries</strong>
-                  <p>
-                    Add at least one beneficiary with percentage splits totaling
-                    100%.
-                  </p>
-                </div>
-              </div>
-            </div>
-          ) : null}
-
-          <dl className="statGrid">
-            <div>
-              <dt>BTC Locked</dt>
-              <dd className="statHighlight">
-                {fmtBtc(vault.vaultBalance)} BTC
-              </dd>
-            </div>
-            <div>
-              <dt>BTC Price</dt>
-              <dd>{fmtUsd(btcPrice)}</dd>
-            </div>
-            <div>
-              <dt>Est. MUSD</dt>
-              <dd>{fmtMusd(estimatedMusd)}</dd>
-            </div>
-            <div>
-              <dt>Splits</dt>
-              <dd>{vault.totalBps?.toString() ?? "0"} / 10000</dd>
-            </div>
-          </dl>
-
-          <CollateralHealth price={btcPrice} />
-
-          {!vault.released && (
-            <div className="ownerControls">
-              <div className="depositRow">
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="BTC amount"
-                  value={depositAmount}
-                  onChange={(e) =>
-                    setDepositAmount(e.target.value.replace(/[^0-9.]/g, ""))
-                  }
+          <div className="emptyIcon">
+            <PlusCircle size={40} />
+          </div>
+          <h2>No vaults yet</h2>
+          <p>
+            Create your first vault to start protecting your Bitcoin
+            inheritance.
+          </p>
+          <button
+            className="actionBtn createVaultBtn"
+            type="button"
+            onClick={() => setCreating(true)}
+          >
+            <PlusCircle size={16} /> Create Vault
+          </button>
+        </motion.div>
+      ) : (
+        <div className="vaultGrid">
+          {userVaults.map((vaultAddr, i) => {
+            const meta = vaultMetas.find(
+              (m) => m.address.toLowerCase() === vaultAddr.toLowerCase(),
+            );
+            return (
+              <motion.div
+                key={vaultAddr}
+                className="vaultCard"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.08, ease }}
+              >
+                <div
+                  className="vaultCardCover"
+                  style={{
+                    backgroundImage: `url(${meta?.coverImage || COVER_IMAGES[i % COVER_IMAGES.length]})`,
+                  }}
                 />
-                <button
-                  className="actionBtn"
-                  type="button"
-                  onClick={doDeposit}
-                  disabled={insufficientGas}
-                >
-                  <Wallet size={15} /> Deposit
-                </button>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        <motion.div
-          className={`card cockpitCard ${scenario}`}
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08, ease }}
-        >
-          <div className="stateHeader">
-            <span>
-              {scenario === "active"
-                ? "Check-in active"
-                : scenario === "ready"
-                  ? "Check-in missed"
-                  : "Vault released"}
-            </span>
-            <strong>
-              {scenario === "active"
-                ? "Release blocked"
-                : scenario === "ready"
-                  ? "Release available"
-                  : "MUSD distributed"}
-            </strong>
-          </div>
-
-          <div className="timerModule">
-            <svg className="timerRing" viewBox="0 0 200 200">
-              <circle className="ringTrack" cx="100" cy="100" r="78" />
-              <circle
-                className="ringProgress"
-                cx="100"
-                cy="100"
-                r="78"
-                pathLength="1"
-                style={{ strokeDashoffset: 1 - progress }}
-              />
-            </svg>
-            <div className="timerCore">
-              <HeartPulse size={24} />
-              <strong>
-                {scenario === "released" ? "done" : fmtTimer(secondsRemaining)}
-              </strong>
-              <span>
-                {scenario === "active"
-                  ? "until release"
-                  : scenario === "ready"
-                    ? "ready"
-                    : "released"}
-              </span>
-            </div>
-          </div>
-
-          <div className="controlRail">
-            {!vault.released && (
-              <button
-                className="actionBtn"
-                type="button"
-                onClick={doHeartbeat}
-                disabled={insufficientGas || !heartbeatSim.isSuccess}
-              >
-                <RotateCcw size={15} /> Check-in
-              </button>
-            )}
-            <button
-              className="actionBtn release"
-              type="button"
-              disabled={
-                scenario !== "ready" || insufficientGas || !releaseSim.isSuccess
-              }
-              onClick={doRelease}
-            >
-              <Activity size={15} /> Release MUSD
-            </button>
-          </div>
-
-          {txStatus && <div className="txStatus">{txStatus}</div>}
-        </motion.div>
-
-        <motion.div
-          className="card"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.16, ease }}
-        >
-          <h3 className="cardTitle">
-            Beneficiaries <span className="benCountBadge">{benCount}</span>
-          </h3>
-
-          {beneficiaries.length > 0 ? (
-            <BeneficiaryCards
-              beneficiaries={beneficiaries}
-              estimatedMusd={estimatedMusd}
-              released={vault.released}
-              isOwner={true}
-              connected={address}
-              onRemove={doRemoveBeneficiary}
-              disabled={insufficientGas}
-            />
-          ) : (
-            <div className="emptyBenPrompt">
-              <Users size={20} />
-              <strong>No beneficiaries yet</strong>
-              <p>
-                Add wallet addresses below with percentage splits (BPS). Splits
-                must total 10000 (100%).
-              </p>
-            </div>
-          )}
-
-          {!vault.released && (
-            <div className="addBenForm">
-              <input
-                type="text"
-                placeholder="0x address"
-                value={newBenAddress}
-                onChange={(e) => setNewBenAddress(e.target.value)}
-              />
-              <input
-                type="text"
-                inputMode="numeric"
-                placeholder="BPS"
-                value={newBenBps}
-                onChange={(e) =>
-                  setNewBenBps(e.target.value.replace(/[^0-9]/g, ""))
-                }
-              />
-              <button
-                className="actionBtn"
-                type="button"
-                onClick={doAddBeneficiary}
-                disabled={insufficientGas}
-              >
-                <Plus size={15} />
-              </button>
-            </div>
-          )}
-        </motion.div>
-      </div>
+                <div className="vaultCardBody">
+                  <h3>{meta?.name || `Vault ${i + 1}`}</h3>
+                  <p className="vaultCardDesc">
+                    {meta?.description || "No description"}
+                  </p>
+                  <div className="vaultCardMeta">
+                    <span>{shortAddress(vaultAddr)}</span>
+                    <a
+                      href={`https://explorer.test.mezo.org/address/${vaultAddr}`}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,20 +1,13 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import {
-  Compass,
-  LockKeyhole,
-  PlusCircle,
-  Shield,
-  LogOut,
-  Gift,
-} from "lucide-react";
-import { useAccount, useDisconnect } from "wagmi";
+import { Compass, LockKeyhole, LogOut, Gift } from "lucide-react";
+import { useAccount, useDisconnect, useReadContract } from "wagmi";
 import { WalletEntry } from "./WalletEntry";
 import { ExplorerPage } from "./pages/ExplorerPage";
 import { MyVaultsPage } from "./pages/MyVaultsPage";
 import { BeneficiaryPage } from "./pages/BeneficiaryPage";
 import { OnboardingModal } from "./OnboardingModal";
-import { useKinVaultState, useBeneficiaries } from "../hooks/useKinVault";
+import { FACTORY_ABI, MEZO_ADDRESSES } from "../lib/contracts";
 
 type Page = "explorer" | "my-vaults" | "beneficiary";
 
@@ -27,27 +20,29 @@ const navItems: { id: Page; label: string; icon: typeof Compass }[] = [
 export function AppShell({ passportEnabled }: { passportEnabled: boolean }) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
-  const vault = useKinVaultState();
-  const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
-  const { beneficiaries } = useBeneficiaries(benCount);
 
-  const isOwner =
-    address &&
-    vault.owner &&
-    address.toLowerCase() === vault.owner.toLowerCase();
-  const isBeneficiary =
-    address &&
-    beneficiaries.some((b) => b.addr.toLowerCase() === address!.toLowerCase());
+  const { data: myVaults, isLoading: vaultsLoading } = useReadContract({
+    address: MEZO_ADDRESSES.factory,
+    abi: FACTORY_ABI,
+    functionName: "getVaultsByOwner",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address },
+  });
 
-  const [page, setPage] = useState<Page>("explorer");
+  const userVaults = (myVaults as `0x${string}`[]) ?? [];
+  const hasVaults = userVaults.length > 0;
+
+  const [page, setPage] = useState<Page>("my-vaults");
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    if (vault.isLoading) return;
-    if (!isOwner && !isBeneficiary) {
+    if (vaultsLoading) return;
+    if (!hasVaults) {
       setShowOnboarding(true);
+    } else {
+      setPage("my-vaults");
     }
-  }, [isOwner, isBeneficiary, vault.isLoading]);
+  }, [hasVaults, vaultsLoading]);
 
   const handleOnboardingChoice = (
     choice: "create" | "explore" | "beneficiary",
