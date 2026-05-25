@@ -86,6 +86,19 @@ export function Landing() {
       </nav>
 
       <section className="heroSection">
+        <video
+          className="heroVideo"
+          autoPlay
+          muted
+          loop
+          playsInline
+          src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260324_151826_c7218672-6e92-402c-9e45-f1e0f454bdc4.mp4"
+        />
+        <div className="heroOverlayTop" />
+        <div className="heroOverlayVignette" />
+        <div className="heroOverlayBottom" />
+        <div className="heroGrain" />
+
         <motion.div
           className="heroContent"
           initial={{ opacity: 0, y: 32 }}
@@ -98,7 +111,10 @@ export function Landing() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.1, ease }}
           >
-            <Shield size={14} />
+            <span className="badgeDot">
+              <span className="badgeDotPing" />
+              <span className="badgeDotCore" />
+            </span>
             Built on Mezo · Powered by Bitcoin
           </motion.div>
 
@@ -155,8 +171,6 @@ export function Landing() {
             </a>
           </motion.div>
         </motion.div>
-
-        <div className="heroGlow" />
       </section>
 
       <section className="stepsSection">
