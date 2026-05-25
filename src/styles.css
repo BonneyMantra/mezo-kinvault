@@ -789,6 +789,54 @@ button {
   text-align: center;
 }
 
+/* --- Faucet / gas gate --- */
+.faucetBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: calc(100% - 56px);
+  padding: 12px 18px;
+  background: rgba(240, 112, 95, 0.1);
+  border: 1px solid rgba(240, 112, 95, 0.28);
+  border-radius: 12px;
+  color: var(--red);
+  font-size: 0.85rem;
+}
+
+.faucetBanner span {
+  flex: 1;
+  color: var(--text);
+}
+
+.faucetBtn {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  background: var(--red);
+  color: var(--ink);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: filter 0.2s;
+}
+
+.faucetBtn:hover {
+  filter: brightness(1.1);
+}
+
+.gasNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 0.76rem;
+  color: var(--red);
+  opacity: 0.85;
+}
+
 /* --- Owner Controls --- */
 .ownerControls {
   display: flex;

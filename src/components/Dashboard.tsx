@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import {
   Activity,
   ArrowLeft,
+  Droplet,
   HeartPulse,
   Plus,
   RotateCcw,
@@ -11,11 +12,16 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
+  useBalance,
   useWriteContract,
   useWaitForTransactionReceipt,
   useDisconnect,
 } from "wagmi";
 import { parseEther, formatEther } from "viem";
+
+const FAUCET_URL = "https://faucet.test.mezo.org/";
+// Flat gas floor — Mezo gas is cheap, this covers any contract call.
+const GAS_FLOOR = parseEther("0.0001");
 import { shortAddress } from "../lib/proof";
 import { KINVAULT_ABI, MEZO_ADDRESSES } from "../lib/contracts";
 import { useKinVaultState, useBeneficiaries } from "../hooks/useKinVault";
@@ -51,8 +57,16 @@ const formatUsd = (price: bigint | undefined) => {
 export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
+  const { data: nativeBalance } = useBalance({
+    address,
+    query: { refetchInterval: 10000 },
+  });
   const vault = useKinVaultState();
   const { price: btcPrice } = useBtcPrice();
+
+  // Gas pre-check: block all transactions if the wallet can't cover gas.
+  const balanceLoaded = nativeBalance !== undefined;
+  const insufficientGas = balanceLoaded && nativeBalance.value < GAS_FLOOR;
   const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
   const { beneficiaries, refetch: refetchBens } = useBeneficiaries(benCount);
 
@@ -210,6 +224,29 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
         </div>
       </header>
 
+      {insufficientGas && (
+        <motion.div
+          className="faucetBanner"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, ease }}
+        >
+          <Droplet size={16} />
+          <span>
+            You need testnet BTC for gas before you can transact. Claim from the
+            Mezo faucet, then refresh.
+          </span>
+          <a
+            className="faucetBtn"
+            href={FAUCET_URL}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Get testnet BTC
+          </a>
+        </motion.div>
+      )}
+
       <div className="dashGrid">
         <motion.div
           className="dashPanel vaultPanel"
@@ -249,7 +286,12 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
                     setDepositAmount(e.target.value.replace(/[^0-9.]/g, ""))
                   }
                 />
-                <button className="actionBtn" type="button" onClick={doDeposit}>
+                <button
+                  className="actionBtn"
+                  type="button"
+                  onClick={doDeposit}
+                  disabled={insufficientGas}
+                >
                   <Wallet size={15} /> Deposit
                 </button>
               </div>
@@ -299,20 +341,32 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
 
           <div className="controlRail">
             {isOwner && !vault.released && (
-              <button className="actionBtn" type="button" onClick={doHeartbeat}>
+              <button
+                className="actionBtn"
+                type="button"
+                onClick={doHeartbeat}
+                disabled={insufficientGas}
+              >
                 <RotateCcw size={15} /> Heartbeat
               </button>
             )}
             <button
               className="actionBtn release"
               type="button"
-              disabled={scenario !== "ready" || !vault.canRelease}
+              disabled={
+                scenario !== "ready" || !vault.canRelease || insufficientGas
+              }
               onClick={doRelease}
             >
               <Activity size={15} /> Release MUSD
             </button>
           </div>
 
+          {insufficientGas && (
+            <div className="gasNote">
+              <Droplet size={13} /> Insufficient BTC for gas
+            </div>
+          )}
           {txStatus && <div className="txStatus">{txStatus}</div>}
         </motion.div>
 
@@ -337,6 +391,7 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
                       className="benRemove"
                       type="button"
                       onClick={() => doRemoveBeneficiary(i)}
+                      disabled={insufficientGas}
                     >
                       <Trash2 size={13} />
                     </button>
@@ -387,6 +442,7 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
                 className="actionBtn"
                 type="button"
                 onClick={doAddBeneficiary}
+                disabled={insufficientGas}
               >
                 <Plus size={15} />
               </button>
