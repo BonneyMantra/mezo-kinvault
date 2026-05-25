@@ -1,37 +1,19 @@
 <claude-mem-context>
 # Memory Context
 
-# [2026-05-21T00-46-20Z-onchain-bitcoin-will-beneficiary-release] recent context, 2026-05-25 9:03am GMT+5:30
+# [2026-05-21T00-46-20Z-onchain-bitcoin-will-beneficiary-release] recent context, 2026-05-25 10:58pm GMT+5:30
 
 Legend: 🎯session 🔴bugfix 🟣feature 🔄refactor ✅change 🔵discovery ⚖️decision
 Format: ID TIME TYPE TITLE
 Fetch details: get_observations([IDs]) | Search: mem-search skill
 
-Stats: 50 obs (22,764t read) | 1,734,315t work | 99% savings
+Stats: 50 obs (21,965t read) | 1,656,236t work | 99% savings
 
 ### May 24, 2026
 S1124 KinVault Claude Project Memory Updated — BonneyMantra Reassignment Persisted to Local Memory (May 24 at 9:43 PM)
 S1111 Mezo Hackathon KinVault — Autonomous Completion Session: deploy, test, report, and push all docs (May 24 at 9:43 PM)
 ### May 25, 2026
 S1132 Cloudflare Pages Deployment Removed — Vercel Retained as Primary Host (May 25 at 4:13 AM)
-7035 4:38a 🟣 KinVault Demo State Configured On-Chain — Beneficiaries and BTC Deposit Live
-7043 4:40a 🔵 KinVault GitHub Repo — Under BonneyMantra Account, Not gabrielantonyxaviour
-7044 " 🟣 KinVault Vercel Production Deploy Live — mezo-kinvault.vercel.app
-7056 4:51a ⚖️ KinVault — Parallel Production Wrap-Up Architecture for Mezo Hackathon
-7068 4:57a ⚖️ KinVault Parallel Production Session — Architecture and Phase Plan
-7076 5:01a 🔵 KinVault Mezo Hackathon App — Build Clean, Dev Server Running, Architecture Identified
-7081 5:02a 🔴 KinVault main.tsx — Removed Conditional Wallet Provider Wrapping
-7082 5:03a 🔵 KinVault Local Dev Server Confirmed Serving — Blank Page Was Browser Session Artifact
-7083 5:05a 🔵 KinVault Vercel Production Root Cause — WagmiProviderNotFoundError Due to Missing Env Var
-7084 " 🔴 KinVault Production Crash Fixed — WagmiProvider Always Mounted with Fallback Config
-7098 5:19a 🔵 KinVault — WalletConnect Project ID Missing from Vault Under Vite Prefix
-7099 " 🟣 KinVault — WalletConnect Enabled and Redeployed to Cloudflare Pages
-7101 5:22a 🟣 KinVault — Both Deployments Live and Visually Verified
-7103 " 🔵 KinVault UI Structure — RainbowKit, "Connect Passport" CTA, MUSD Release Flow
-7110 5:37a 🔵 Mezo Hackathon — Template Library Audit for Landing Page Redesign
-7116 5:41a 🔵 RIVR Template — Component Architecture and SVG Corner Cutout Pattern Studied
-7117 " ⚖️ Mezo Landing Page — Design Hybrid: VaultShield Animations + RIVR Glassmorphism
-7120 5:43a 🟣 KinVault Landing.tsx — New Professional Landing Page Component Created
 7122 5:45a 🟣 KinVault styles.css — Complete Design System Overhaul for Landing + Dashboard
 7127 6:18a 🔵 Grind Template Library — Hero Video Background Pattern Catalogued
 7128 6:20a 🔵 KinVault Landing.tsx Hero Section — No Video Background, Only heroGlow Div
@@ -40,7 +22,7 @@ S1132 Cloudflare Pages Deployment Removed — Vercel Retained as Primary Host (M
 7136 6:27a 🟣 KinVault Hero — Thermal Glow Video Background Committed and Deployed to Vercel
 7147 6:58a ⚖️ Cloudflare Pages Deployment Removed — Vercel Retained as Primary Host
 S1133 KinVault (Mezo Hackathon) — Delete Cloudflare Pages deployment, keep Vercel as sole frontend host (May 25 at 6:58 AM)
-S1137 KinVault end-to-end test checklist — what Gabriel needs to do right now to test the app (May 25 at 7:10 AM)
+S1137 KinVault end-to-end test checklist — what Gabriel needs to do right now to test the app (May 25 at 6:59 AM)
 7164 7:13a ✅ KinVault WalletConnect Project ID Configured and Deployed
 7192 8:12a 🔵 KinVault Mezo Hackathon — Current Project State Audit
 7201 8:18a 🔵 Remotion Skills Available On-Disk — Ledger Product Directory No Longer Exists
@@ -66,6 +48,33 @@ S1137 KinVault end-to-end test checklist — what Gabriel needs to do right now 
 7221 " 🟣 Mezo Pitch Video — yt-dlp Invoked to Extract YouTube Pitch Coaching Transcript
 7222 " 🟣 Mezo Pitch Coaching YouTube Transcript Extracted — Full Content Retrieved
 7224 8:52a 🟣 KinVault Pitch Video Script Written — Full 3-Minute Timeline With Demo Slots and Transcripts
+7225 9:05a 🔵 KinVault Remotion Project Not Yet Scaffolded — Environment Ready to Build
+7228 9:07a 🟣 KinVault Remotion Pitch Video Project Scaffolded — Full Structure With Storyboard and Demo Slots
+7229 9:08a 🟣 KinVaultPitch.tsx Remotion Component Implemented — Full Visual System with Scene Switcher and Demo Slot Placeholder
+7230 " 🔵 KinVault Release Transaction Fully Executed — 2463 MUSD Distributed on Mezo Testnet
+7245 9:47a 🔵 AI Video Generation Stack — inference.sh CLI + Higgsfield + Remotion Architecture
+7246 9:50a 🔵 Remotion Best Practices Skill — Full Rule File Catalog Confirmed
+7247 9:59a 🔵 Prior Video Production Patterns — Kling 3.0 Limits and FFmpeg Assembly Confirmed in MEMORY.md
+7248 " ⚖️ Mezo Hackathon Remotion Pitch Video — Active Build Plan Created
+7249 10:02a 🟣 KinVault Pitch Remotion Video — AI Video Layer Integration Added
+7250 " ✅ KinVault Pitch Remotion README — AI Insert File Placement Convention Documented
+7264 10:21a 🟣 KinVault Remotion Pitch Video — Four Still Frames Rendered Successfully
+7265 10:22a 🔵 KinVault Pitch Video Final Output Specs Confirmed via ffprobe
+7266 " 🔵 Kling 3.0 AI Video Generation Patterns — Reusable Knowledge from Memory
+7277 11:08a 🔵 KinVault Pitch Video Placeholder Outputs Confirmed on Disk
+7279 11:10a 🔵 Prior Remotion + Kling + ElevenLabs Video Assembly Patterns Found in Memory
+7280 11:11a ✅ KinVault Storyboard Updated — New "proof" Visual Type, Hook and Team Scene Visuals Reassigned
+7303 8:12p ⚖️ Mezo Hackathon Pitch Video — Full Rework Initiated After Codex Session Abandoned
+7306 8:14p ⚖️ Mezo Hackathon Pitch Video — Complete Rework of Remotion Video after Codex Session Dissatisfaction
+S1150 Mezo Hackathon Pitch Video — Complete Reinvention of Remotion Video after User Dissatisfaction with Codex Session (May 25 at 8:27 PM)
+**Investigated**: The previous Codex session's work on the Remotion pitch video for the Mezo/KinVault hackathon submission. The user was unhappy with whatever was produced and wants a full rework. The Claude session reviewed what Codex had been attempting and diagnosed the core problems: flat design, wrong typography (Inter), incorrect Bitcoin gold color, colored circle placeholders instead of real brand logos, flat 1px-border panels, and poor motion design that didn't look intentional when frozen.
 
-Access 1734k tokens of past work via get_observations([IDs]) or mem-search skill.
+**Learned**: The Codex session was burning cycles by re-rendering the full 180s MP4 on every iteration instead of doing fast still-frame proofs per slide. The existing video has 4 cinematic clips (vault cube footage + cinematic clips) that should serve as the visual backbone. The current design used pale yellow instead of real Bitcoin gold (#F7931A), generic Inter font instead of deliberate typography roles, and flat colored circles instead of real brand logos. The core complaint was that frozen frames didn't look intentional — motion was covering for weak static composition.
+
+**Completed**: A complete reinvention plan was designed and presented to the user for approval before any code changes. The plan covers: (1) Typography system — Instrument Serif for emotional headlines, Space Grotesk for product titles, JetBrains Mono for all data/proofs; (2) Color — true near-black, real Bitcoin gold #F7931A, Mezo accent, MUSD green with warm gold bloom + film grain + vignette; (3) Real brand logos replacing colored circles; (4) Glass depth with real blur, rim-light, shadow replacing flat panels; (5) Per-slide treatments covering Hook, Team/Proof, Problem, Solution (vault pipeline), Demo slots ×4, Mezo value, and Close slides; (6) Build discipline fix — verify each slide with fast stills, only one full MP4 render at the very end; (7) Optional AI asset generation prompts for Problem beat, Gold BTC coin macro, and Family relief/payoff scenes.
+
+**Next Steps**: Waiting for user go-ahead on the reinvention plan. Once approved, will start with typography + theme foundation first, then build slide by slide with still proofs before doing any full render. The hybrid direction is locked — Claude generates AI assets from prompts, user provides real demo recordings for the 4 demo placeholder slots.
+
+
+Access 1656k tokens of past work via get_observations([IDs]) or mem-search skill.
 </claude-mem-context>

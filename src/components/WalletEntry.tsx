@@ -1,67 +1,64 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { BadgeCheck, WalletCards } from "lucide-react";
+import { Wallet } from "lucide-react";
+import { useAccount, useBalance } from "wagmi";
+import { formatEther } from "viem";
 
-type WalletEntryProps = {
-  passportEnabled: boolean;
-};
+const shortAddr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
+const dicebear = (addr: string) =>
+  `https://api.dicebear.com/9.x/shapes/svg?seed=${addr}`;
 
-export function WalletEntry({ passportEnabled }: WalletEntryProps) {
+export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
+  const { address } = useAccount();
+  const { data: bal } = useBalance({
+    address,
+    query: { refetchInterval: 15000 },
+  });
+
+  const btc = bal ? Number(formatEther(bal.value)).toFixed(4) : "…";
+
   if (!passportEnabled) {
     return (
-      <button
-        className="iconTextButton secondary"
-        type="button"
-        disabled
-        title="Set VITE_WALLETCONNECT_PROJECT_ID to enable Mezo Passport."
-      >
-        <WalletCards size={17} />
-        Passport config needed
+      <button className="walletBtn" type="button" disabled>
+        <Wallet size={15} />
+        Config needed
       </button>
     );
   }
 
   return (
     <ConnectButton.Custom>
-      {({
-        account,
-        chain,
-        openAccountModal,
-        openChainModal,
-        openConnectModal,
-        mounted,
-      }) => {
-        const ready = mounted;
-        const connected = ready && account && chain;
+      {({ account, chain, openAccountModal, openConnectModal, mounted }) => {
+        const connected = mounted && account && chain;
 
         if (!connected) {
           return (
             <button
-              className="iconTextButton"
+              className="walletBtn"
               type="button"
               onClick={openConnectModal}
             >
-              <WalletCards size={17} />
-              Connect Passport
+              <Wallet size={15} />
+              Connect Wallet
             </button>
           );
         }
 
         return (
-          <div className="walletConnected">
+          <div className="walletPill">
+            <span className="walletBal">{btc} BTC</span>
             <button
-              className="iconOnlyButton"
-              type="button"
-              onClick={openChainModal}
-              aria-label="Change network"
-            >
-              <BadgeCheck size={17} />
-            </button>
-            <button
-              className="iconTextButton secondary"
+              className="walletAccount"
               type="button"
               onClick={openAccountModal}
             >
-              {account.displayName}
+              <img
+                className="walletAvatar"
+                src={dicebear(account.address)}
+                alt=""
+                width={22}
+                height={22}
+              />
+              {shortAddr(account.address)}
             </button>
           </div>
         );

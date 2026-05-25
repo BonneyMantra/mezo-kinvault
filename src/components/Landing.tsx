@@ -32,8 +32,8 @@ const steps = [
   {
     icon: HeartPulse,
     num: "03",
-    title: "Maintain heartbeat",
-    body: "Send a periodic heartbeat transaction. Miss it, and the vault auto-borrows MUSD against your BTC and distributes it to your beneficiaries.",
+    title: "Keep a check-in alive",
+    body: "Confirm you're active on a schedule you choose. The demo uses 60 seconds; a real vault would use monthly or quarterly reminders with a grace period.",
   },
 ];
 
@@ -146,9 +146,9 @@ export function Landing() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.4, ease }}
           >
-            KinVault auto-borrows MUSD against your BTC collateral and
-            distributes it to verified beneficiaries when your heartbeat
-            expires. Bitcoin stays whole. Heirs get usable money.
+            KinVault prepares MUSD liquidity against your BTC collateral and
+            releases it to verified beneficiaries only after you miss the
+            scheduled check-ins. Bitcoin stays whole. Heirs get usable money.
           </motion.p>
 
           <motion.div
