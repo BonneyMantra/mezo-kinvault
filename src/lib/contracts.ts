@@ -5,7 +5,9 @@ export const MEZO_ADDRESSES = {
   troveManager: "0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0",
   priceFeed: "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
   musd: "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
-  kinVault: "0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb" as `0x${string}`,
+  mezo: "0x7B7c000000000000000000000000000000000001" as `0x${string}`,
+  // KinVault v3 — MEZO bond + keeper reward + beneficiary rehearsal
+  kinVault: "0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9" as `0x${string}`,
 } as const;
 
 export const KINVAULT_ABI = [
@@ -98,6 +100,69 @@ export const KINVAULT_ABI = [
   },
   {
     type: "function",
+    name: "secondsUntilRelease",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "mezoBond",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "keeperRewardBps",
+    inputs: [],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isBeneficiary",
+    inputs: [{ type: "address", name: "who" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "beneficiaryBps",
+    inputs: [{ type: "address", name: "who" }],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "hasRehearsed",
+    inputs: [{ type: "address", name: "who" }],
+    outputs: [{ type: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "rehearsalAt",
+    inputs: [{ type: "address", name: "" }],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "rehearseClaim",
+    inputs: [],
+    outputs: [{ type: "uint16" }],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "fundMezoBond",
+    inputs: [{ type: "uint256", name: "amount" }],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
     name: "deposit",
     inputs: [],
     outputs: [],
@@ -187,6 +252,41 @@ export const KINVAULT_ABI = [
       { type: "uint256", name: "releasedAt" },
     ],
   },
+  {
+    type: "event",
+    name: "MezoBondFunded",
+    inputs: [
+      { type: "address", name: "owner", indexed: true },
+      { type: "uint256", name: "amount" },
+      { type: "uint256", name: "totalBond" },
+    ],
+  },
+  {
+    type: "event",
+    name: "MezoKeeperRewardPaid",
+    inputs: [
+      { type: "address", name: "keeper", indexed: true },
+      { type: "uint256", name: "amount" },
+    ],
+  },
+  {
+    type: "event",
+    name: "MezoBeneficiaryRewardPaid",
+    inputs: [
+      { type: "address", name: "beneficiary", indexed: true },
+      { type: "uint256", name: "amount" },
+      { type: "uint16", name: "bps" },
+    ],
+  },
+  {
+    type: "event",
+    name: "BeneficiaryRehearsed",
+    inputs: [
+      { type: "address", name: "beneficiary", indexed: true },
+      { type: "uint256", name: "at" },
+      { type: "uint16", name: "bps" },
+    ],
+  },
 ] as const;
 
 export const PRICE_FEED_ABI = [
@@ -196,6 +296,37 @@ export const PRICE_FEED_ABI = [
     inputs: [],
     outputs: [{ type: "uint256" }],
     stateMutability: "nonpayable",
+  },
+] as const;
+
+export const BORROWER_OPS_ABI = [
+  {
+    type: "function",
+    name: "minNetDebt",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MUSD_GAS_COMPENSATION",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "MCR",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "borrowingRate",
+    inputs: [],
+    outputs: [{ type: "uint256" }],
+    stateMutability: "view",
   },
 ] as const;
 

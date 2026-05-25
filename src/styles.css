@@ -1063,3 +1063,203 @@ button {
     transition-duration: 1ms !important;
   }
 }
+
+/* ═══════════════════════════════════════════
+   RISK PREVIEW · MEZO BOND · REHEARSAL · JUDGE PROOF
+   ═══════════════════════════════════════════ */
+
+.riskPreview {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.riskHeader {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.74rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--copper);
+  margin-bottom: 12px;
+}
+
+.riskStats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.riskStats div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.riskStats dt {
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+
+.riskStats dd {
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.riskError {
+  font-size: 0.8rem;
+  color: var(--red);
+  margin: 0;
+}
+
+.mezoBondRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(196, 127, 69, 0.08);
+  border: 1px solid rgba(196, 127, 69, 0.2);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.mezoBondRow strong {
+  color: var(--ivory);
+  font-variant-numeric: tabular-nums;
+}
+
+.mezoBondRow em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 0.7rem;
+  color: var(--copper);
+}
+
+.rehearsalBox {
+  margin-top: 16px;
+  padding: 14px;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  background: rgba(104, 201, 146, 0.05);
+}
+
+.rehearsalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.rehearsalHead strong {
+  font-size: 0.9rem;
+}
+
+.rehearsalDone {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--moss);
+}
+
+.rehearsalPending {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.rehearsalCopy {
+  font-size: 0.76rem;
+  line-height: 1.5;
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
+.judgeProof {
+  margin: 24px 0 0;
+  padding: 20px 24px;
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  background: var(--panel);
+}
+
+.judgeProofHead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--copper);
+  margin-bottom: 16px;
+}
+
+.judgeProofGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 24px;
+}
+
+.judgeProofGrid div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.judgeProofGrid dt {
+  font-size: 0.68rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.judgeProofGrid dd {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.judgeProofGrid a {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--copper);
+  transition: color 0.2s;
+}
+
+.judgeProofGrid a:hover {
+  color: var(--ivory);
+}
+
+.proofPending {
+  color: var(--muted);
+  font-weight: 500;
+  font-style: italic;
+}
+
+.judgeDisclaimer {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+@media (max-width: 640px) {
+  .judgeProofGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .riskStats {
+    grid-template-columns: 1fr;
+  }
+}

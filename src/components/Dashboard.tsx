@@ -2,10 +2,14 @@ import { motion } from "motion/react";
 import {
   Activity,
   ArrowLeft,
+  CheckCircle2,
+  Coins,
   Droplet,
+  ExternalLink,
   HeartPulse,
   Plus,
   RotateCcw,
+  ShieldCheck,
   Trash2,
   Wallet,
 } from "lucide-react";
@@ -22,11 +26,23 @@ import { parseEther, formatEther } from "viem";
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 // Flat gas floor — Mezo gas is cheap, this covers any contract call.
 const GAS_FLOOR = parseEther("0.0001");
-import { shortAddress } from "../lib/proof";
+import { shortAddress, PROOF, explorerAddress, explorerTx } from "../lib/proof";
 import { KINVAULT_ABI, MEZO_ADDRESSES } from "../lib/contracts";
-import { useKinVaultState, useBeneficiaries } from "../hooks/useKinVault";
+import {
+  useKinVaultState,
+  useBeneficiaries,
+  useMezoRiskParams,
+  useBeneficiaryStatus,
+} from "../hooks/useKinVault";
 import { useBtcPrice } from "../hooks/useBtcPrice";
 import { WalletEntry } from "./WalletEntry";
+
+const formatTokenAmount = (wei: bigint | undefined, digits = 2) => {
+  if (wei === undefined) return "—";
+  return Number(formatEther(wei)).toLocaleString(undefined, {
+    maximumFractionDigits: digits,
+  });
+};
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -62,6 +78,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
     query: { refetchInterval: 10000 },
   });
   const vault = useKinVaultState();
+  const risk = useMezoRiskParams();
+  const benStatus = useBeneficiaryStatus(address);
   const { price: btcPrice } = useBtcPrice();
 
   // Gas pre-check: block all transactions if the wallet can't cover gas.
@@ -133,6 +151,7 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
       setTxStatus("Confirmed");
       vault.refetch();
       refetchBens();
+      benStatus.refetch();
       setTimeout(() => setTxStatus(""), 3000);
     }
   }, [txConfirmed]);
@@ -188,6 +207,19 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
       functionName: "release",
     });
   };
+
+  const doRehearse = () => {
+    setTxStatus("Rehearsing claim on-chain...");
+    writeContract({
+      address: MEZO_ADDRESSES.kinVault,
+      abi: KINVAULT_ABI,
+      functionName: "rehearseClaim",
+    });
+  };
+
+  const secondsUntilRelease = vault.releaseAt
+    ? Math.max(0, Number(vault.releaseAt) - Math.floor(now / 1000))
+    : undefined;
 
   const statusCopy = {
     active: { eyebrow: "Heartbeat active", title: "Release blocked" },
@@ -273,6 +305,66 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
               <dd>{vault.totalBps?.toString() ?? "0"} / 10000</dd>
             </div>
           </dl>
+
+          <div className="riskPreview">
+            <div className="riskHeader">
+              <ShieldCheck size={14} />
+              <span>Live Mezo borrow preview</span>
+            </div>
+            {risk.isError ? (
+              <p className="riskError">
+                Unable to read BorrowerOperations. Check RPC connection.
+              </p>
+            ) : (
+              <dl className="riskStats">
+                <div>
+                  <dt>Min net debt</dt>
+                  <dd>{formatTokenAmount(risk.minNetDebt)} MUSD</dd>
+                </div>
+                <div>
+                  <dt>Gas comp</dt>
+                  <dd>{formatTokenAmount(risk.gasCompensation)} MUSD</dd>
+                </div>
+                <div>
+                  <dt>Borrow rate</dt>
+                  <dd>
+                    {risk.borrowingRate !== undefined
+                      ? `${(Number(risk.borrowingRate) / 1e16).toFixed(2)}%`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Min collateral (MCR)</dt>
+                  <dd>
+                    {risk.mcr !== undefined
+                      ? `${(Number(risk.mcr) / 1e16).toFixed(0)}%`
+                      : "—"}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Release ready</dt>
+                  <dd>{vault.canRelease ? "Yes" : "No"}</dd>
+                </div>
+                <div>
+                  <dt>Time to release</dt>
+                  <dd>
+                    {secondsUntilRelease !== undefined
+                      ? formatTimer(secondsUntilRelease)
+                      : "—"}
+                  </dd>
+                </div>
+              </dl>
+            )}
+          </div>
+
+          <div className="mezoBondRow">
+            <Coins size={14} />
+            <span>MEZO keeper bond</span>
+            <strong>{formatTokenAmount(vault.mezoBond)} MEZO</strong>
+            {vault.keeperRewardBps !== undefined && (
+              <em>{(vault.keeperRewardBps / 100).toFixed(0)}% keeper</em>
+            )}
+          </div>
 
           {isOwner && !vault.released && (
             <div className="ownerControls">
@@ -399,6 +491,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
                 </li>
               ))}
             </ol>
+          ) : benCount > 0 ? (
+            <p className="emptyNote">Loading beneficiaries…</p>
           ) : (
             <p className="emptyNote">No beneficiaries added yet.</p>
           )}
@@ -417,6 +511,36 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
                   )}{" "}
                   MUSD
                 </span>
+              )}
+            </div>
+          )}
+
+          {isBeneficiary && (
+            <div className="rehearsalBox">
+              <div className="rehearsalHead">
+                <strong>Claim rehearsal</strong>
+                {benStatus.hasRehearsed ? (
+                  <span className="rehearsalDone">
+                    <CheckCircle2 size={13} /> Rehearsed
+                  </span>
+                ) : (
+                  <span className="rehearsalPending">Not rehearsed</span>
+                )}
+              </div>
+              <p className="rehearsalCopy">
+                Practice your inheritance claim on-chain. Proves you can sign as
+                a configured beneficiary — no funds move.
+              </p>
+              {!vault.released && (
+                <button
+                  className="actionBtn"
+                  type="button"
+                  onClick={doRehearse}
+                  disabled={insufficientGas}
+                >
+                  <ShieldCheck size={15} />{" "}
+                  {benStatus.hasRehearsed ? "Rehearse again" : "Rehearse claim"}
+                </button>
               )}
             </div>
           )}
@@ -450,6 +574,88 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
           )}
         </motion.div>
       </div>
+
+      <motion.section
+        className="judgeProof"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.2, ease }}
+        aria-label="Judge proof"
+      >
+        <div className="judgeProofHead">
+          <ShieldCheck size={15} />
+          <span>Judge proof — live on Mezo Testnet</span>
+        </div>
+        <div className="judgeProofGrid">
+          <div>
+            <dt>Network</dt>
+            <dd>
+              {PROOF.network} ({PROOF.chainId})
+            </dd>
+          </div>
+          <div>
+            <dt>Contract</dt>
+            <dd>
+              <a
+                href={explorerAddress(PROOF.contract)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddress(PROOF.contract)} <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Deploy tx</dt>
+            <dd>
+              <a
+                href={explorerTx(PROOF.deployTx)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddress(PROOF.deployTx)} <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Release tx</dt>
+            <dd>
+              {vault.released ? (
+                <a
+                  href={explorerTx(PROOF.releaseTx)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {shortAddress(PROOF.releaseTx)} <ExternalLink size={11} />
+                </a>
+              ) : (
+                <span className="proofPending">awaiting release</span>
+              )}
+            </dd>
+          </div>
+          <div>
+            <dt>Proof JSON</dt>
+            <dd>
+              <a href={PROOF.proofJson} target="_blank" rel="noreferrer">
+                latest.json <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Live app</dt>
+            <dd>
+              <a href={PROOF.liveUrl} target="_blank" rel="noreferrer">
+                mezo-kinvault.vercel.app <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+        </div>
+        <p className="judgeDisclaimer">
+          KinVault is custody-planning infrastructure on Mezo. Not a legal will,
+          not probate, not financial advice, and not a seed-phrase custody
+          substitute.
+        </p>
+      </motion.section>
     </div>
   );
 }

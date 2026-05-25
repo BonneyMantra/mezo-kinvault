@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test:e2e": "playwright test",
     "test:contracts": "forge test -vv",
-    "check:mezo": "node scripts/check-mezo-rpc.mjs"
+    "check:mezo": "node scripts/check-mezo-rpc.mjs",
+    "smoke:mezo": "node scripts/mezo-smoke.mjs"
   },
   "dependencies": {
     "@mezo-org/passport": "^0.17.2",

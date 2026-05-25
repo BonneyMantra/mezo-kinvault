@@ -1,10 +1,12 @@
 {
   "borrowerOps": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
   "chainId": 31611,
-  "heartbeatInterval": 60,
+  "heartbeatInterval": 120,
+  "keeperRewardBps": 1000,
+  "mezo": "0x7B7c000000000000000000000000000000000001",
   "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
   "network": "mezo-testnet",
   "owner": "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
   "priceFeed": "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
-  "vault": "0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb"
+  "vault": "0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9"
 }

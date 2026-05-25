@@ -1,29 +1,90 @@
 {
   "product": "KinVault",
-  "proofSource": "mezo testnet",
+  "tagline": "Bitcoin beneficiary rehearsal + emergency MUSD liquidity on Mezo",
+  "proofSource": "mezo-testnet-live",
+  "version": "v3-mezo-utility+rehearsal",
   "network": "Mezo Testnet",
   "chainId": 31611,
-  "mezoTarget": {
-    "chainId": 31611,
-    "rpc": "https://rpc.test.mezo.org",
-    "explorer": "https://explorer.test.mezo.org",
-    "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503"
-  },
-  "status": "deployed",
-  "contractAddress": "0x229869949693f1467b8b43d2907bDAE3C58E3047",
-  "txHash": "0x41f2fe081d980c03616322f44253a0d3c99e2e3680bf24cd1fd2ef3f0469d965",
-  "blockNumber": 13257641,
+  "rpc": "https://rpc.test.mezo.org",
+  "explorer": "https://explorer.test.mezo.org",
+  "frontendUrl": "https://mezo-kinvault.vercel.app",
+  "repo": "https://github.com/BonneyMantra/mezo-kinvault",
+
+  "contractAddress": "0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9",
+  "deployTxHash": "0xac884951e1e194e577f440badad29818086692eff479e4afa879da20602cdfe3",
   "owner": "0x6B9ad963c764a06A7ef8ff96D38D0cB86575eC00",
-  "beneficiary": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
-  "vault": "0x229869949693f1467b8b43d2907bDAE3C58E3047",
-  "asset": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
-  "amount": "0.00 MUSD",
-  "heartbeatIntervalSeconds": 60,
-  "events": [
-    "Heartbeat(owner, at)",
-    "VaultFunded(owner, amount, totalDeposited)",
-    "BeneficiaryReleased(beneficiary, amount, releasedAt)"
+  "heartbeatIntervalSeconds": 120,
+  "keeperRewardBps": 1000,
+
+  "mezoContracts": {
+    "borrowerOperations": "0xCdF7028ceAB81fA0C6971208e83fa7872994beE5",
+    "troveManager": "0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0",
+    "priceFeed": "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
+    "musd": "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
+    "mezo": "0x7B7c000000000000000000000000000000000001"
+  },
+
+  "btcCollateralDeposited": "0.045 BTC",
+  "depositTxHash": "0xaf9a0a29cd26bb7b34de54dafcba1f92a3c44d25b5991ab6b6e4b77b9f96a762",
+
+  "beneficiaries": [
+    {
+      "address": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
+      "bps": 7000,
+      "sharePct": "70%"
+    },
+    {
+      "address": "0x000000000000000000000000000000000000dEaD",
+      "bps": 3000,
+      "sharePct": "30%"
+    }
   ],
-  "verifiedBy": "forge script DeployMezo.s.sol --broadcast --legacy",
-  "deployedAt": "2026-05-25T03:44:00Z"
+  "beneficiaryCount": 2,
+  "totalBps": 10000,
+
+  "rehearsal": {
+    "beneficiary": "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa",
+    "rehearseTxHash": "0x190dad36523279cf7e63f92fb9c2c1cdbe4129a0647b2e1792f7284bb307ca68",
+    "hasRehearsed": true
+  },
+
+  "release": {
+    "executed": true,
+    "releaseTxHash": "0x019e6c1c5c37740b6d11c28203853139b6be0b926d2d3a5110f9d26a84564eab",
+    "blockNumber": 13262129,
+    "troveStatusAfter": 1,
+    "musdDistributed": {
+      "0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa": "1724.065780527165142549 MUSD",
+      "0x000000000000000000000000000000000000dEaD": "739.089334511642203950 MUSD",
+      "total": "2463.155115038807346499 MUSD"
+    }
+  },
+
+  "btcPriceAtRelease": "≈ $77,023 (Mezo PriceFeed.fetchPrice)",
+  "musdEstimateBeforeRelease": "2463.72 MUSD",
+
+  "mezoUtility": {
+    "design": "Owner funds a MEZO bond (ERC20 at 0x7B7c..0001). On release, the keeper who triggers it earns keeperRewardBps (10%) of the bond; the remainder is split to beneficiaries by BPS.",
+    "events": [
+      "MezoBondFunded",
+      "MezoKeeperRewardPaid",
+      "MezoBeneficiaryRewardPaid"
+    ],
+    "mezoTokenVerified": "symbol=MEZO, decimals=18, totalSupply=1.1196e27 (read live on testnet)",
+    "bondFunded": "0 MEZO",
+    "liveBondBlocker": "Mezo MEZO faucet (faucet.test.mezo.org) is gated by Cloudflare Turnstile, which fails for browser automation. Deployer holds 0 testnet MEZO. The on-chain funding path (fundMezoBond) is implemented, unit-tested (testFundMezoBond, testKeeperRewardAndBeneficiarySplitOnRelease), and ready — it needs one human CAPTCHA solve to claim testnet MEZO, then a single fundMezoBond tx."
+  },
+
+  "verification": {
+    "contracts": "forge test -vv  (19/19 pass)",
+    "mezoSmoke": "node scripts/mezo-smoke.mjs  (12/12 pass)",
+    "build": "npm run build",
+    "e2e": "npx playwright test  (12/12 pass at 375/768/1440)",
+    "castDeposit": "cast call 0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9 'released()(bool)' --rpc-url https://rpc.test.mezo.org  ->  true",
+    "castMusdBeneficiary": "cast call 0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503 'balanceOf(address)(uint256)' 0x86CA136dc8B2Ac6B10143Ed23AC361FCBbd6bFCa --rpc-url https://rpc.test.mezo.org  ->  1724065780527165142549",
+    "castTroveStatus": "cast call 0xE47c80e8c23f6B4A1aE41c34837a0599D5D16bb0 'getTroveStatus(address)(uint256)' 0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9 --rpc-url https://rpc.test.mezo.org  ->  1 (active)"
+  },
+
+  "deployedAt": "2026-05-25T08:43:00Z",
+  "releasedAt": "2026-05-25T08:55:00Z"
 }

@@ -19,3 +19,4 @@ outputs/playwright-report/
 outputs/*.log
 outputs/*.last-message
 .vercel
+.env.local

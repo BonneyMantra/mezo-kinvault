@@ -98,6 +98,42 @@ contract MockPriceFeed {
     }
 }
 
+contract MockMEZO {
+    string public name = "Mock MEZO";
+    string public symbol = "MEZO";
+    uint8 public decimals = 18;
+    mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
+
+    function mint(address to, uint256 amount) external {
+        balanceOf[to] += amount;
+    }
+
+    function approve(address spender, uint256 amount) external returns (bool) {
+        allowance[msg.sender][spender] = amount;
+        return true;
+    }
+
+    function transfer(address to, uint256 amount) external returns (bool) {
+        require(balanceOf[msg.sender] >= amount, "insufficient");
+        balanceOf[msg.sender] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 amount) external returns (bool) {
+        require(balanceOf[from] >= amount, "insufficient");
+        uint256 allowed = allowance[from][msg.sender];
+        require(allowed >= amount, "allowance");
+        if (allowed != type(uint256).max) {
+            allowance[from][msg.sender] = allowed - amount;
+        }
+        balanceOf[from] -= amount;
+        balanceOf[to] += amount;
+        return true;
+    }
+}
+
 contract KinVaultTest {
     Vm private constant vm = Vm(address(uint160(uint256(keccak256("hevm cheat code")))));
 
@@ -108,6 +144,7 @@ contract KinVaultTest {
     address constant ANYONE = address(0xD00D);
 
     MockMUSD musd;
+    MockMEZO mezo;
     MockBorrowerOperations borrowerOps;
     MockPriceFeed priceFeed;
     KinVault vault;
@@ -115,11 +152,14 @@ contract KinVaultTest {
     uint256 constant BTC_PRICE = 76830e18;
     uint256 constant HEARTBEAT = 60;
     uint256 constant DEPOSIT = 0.04 ether;
+    uint16 constant KEEPER_BPS = 1000; // 10%
+    uint256 constant BOND = 1000 ether;
 
     function setUp() public {
         vm.warp(1_771_484_400);
 
         musd = new MockMUSD();
+        mezo = new MockMEZO();
         priceFeed = new MockPriceFeed(BTC_PRICE);
         borrowerOps = new MockBorrowerOperations(address(musd));
 
@@ -129,7 +169,9 @@ contract KinVaultTest {
             address(borrowerOps),
             address(priceFeed),
             address(musd),
-            HEARTBEAT
+            address(mezo),
+            HEARTBEAT,
+            KEEPER_BPS
         );
     }
 
@@ -248,6 +290,107 @@ contract KinVaultTest {
         vm.prank(ANYONE);
         vault.release();
         require(vault.released(), "anyone should trigger release");
+    }
+
+    // ─── MEZO bond ───────────────────────────────────────────────────────
+
+    function testFundMezoBond() public {
+        mezo.mint(OWNER, BOND);
+        vm.startPrank(OWNER);
+        mezo.approve(address(vault), BOND);
+        vault.fundMezoBond(BOND);
+        vm.stopPrank();
+
+        require(vault.mezoBond() == BOND, "bond not recorded");
+        require(mezo.balanceOf(address(vault)) == BOND, "MEZO not held by vault");
+    }
+
+    function testNonOwnerCannotFundBond() public {
+        mezo.mint(BEN_A, BOND);
+        vm.startPrank(BEN_A);
+        mezo.approve(address(vault), BOND);
+        vm.expectRevert(KinVault.NotOwner.selector);
+        vault.fundMezoBond(BOND);
+        vm.stopPrank();
+    }
+
+    function testFundZeroBondReverts() public {
+        vm.prank(OWNER);
+        vm.expectRevert(KinVault.ZeroAmount.selector);
+        vault.fundMezoBond(0);
+    }
+
+    function testKeeperRewardAndBeneficiarySplitOnRelease() public {
+        _fundAndSetupBeneficiaries();
+        // fund a MEZO bond
+        mezo.mint(OWNER, BOND);
+        vm.startPrank(OWNER);
+        mezo.approve(address(vault), BOND);
+        vault.fundMezoBond(BOND);
+        vm.stopPrank();
+
+        vm.warp(vault.releaseAt());
+
+        vm.prank(ANYONE);
+        vault.release();
+
+        // keeper (ANYONE) gets 10%
+        uint256 expectedKeeper = (BOND * KEEPER_BPS) / 10000;
+        require(mezo.balanceOf(ANYONE) == expectedKeeper, "keeper reward wrong");
+
+        // remaining 90% split among beneficiaries by BPS
+        uint256 remaining = BOND - expectedKeeper;
+        require(_withinDust(mezo.balanceOf(BEN_A), (remaining * 5000) / 10000), "ben A MEZO wrong");
+        require(_withinDust(mezo.balanceOf(BEN_B), (remaining * 3000) / 10000), "ben B MEZO wrong");
+        require(mezo.balanceOf(BEN_C) > 0, "ben C MEZO zero");
+        require(vault.mezoBond() == 0, "bond not cleared");
+    }
+
+    function testReleaseWithZeroBondSkipsMezo() public {
+        _fundAndSetupBeneficiaries();
+        vm.warp(vault.releaseAt());
+
+        vm.prank(ANYONE);
+        vault.release();
+
+        require(mezo.balanceOf(ANYONE) == 0, "keeper should get no MEZO");
+        require(vault.released(), "should still release MUSD");
+    }
+
+    // ─── Rehearsal ─────────────────────────────────────────────────────────
+
+    function testBeneficiaryCanRehearse() public {
+        _fundAndSetupBeneficiaries();
+
+        require(!vault.hasRehearsed(BEN_A), "should not have rehearsed");
+        vm.prank(BEN_A);
+        uint16 bps = vault.rehearseClaim();
+
+        require(bps == 5000, "rehearsal returned wrong bps");
+        require(vault.hasRehearsed(BEN_A), "rehearsal not recorded");
+        require(vault.rehearsalAt(BEN_A) == block.timestamp, "rehearsal timestamp wrong");
+    }
+
+    function testNonBeneficiaryCannotRehearse() public {
+        _fundAndSetupBeneficiaries();
+
+        vm.prank(ANYONE);
+        vm.expectRevert(KinVault.NotBeneficiary.selector);
+        vault.rehearseClaim();
+    }
+
+    function testIsBeneficiaryView() public {
+        _fundAndSetupBeneficiaries();
+        require(vault.isBeneficiary(BEN_A), "BEN_A should be beneficiary");
+        require(!vault.isBeneficiary(ANYONE), "ANYONE should not be beneficiary");
+        require(vault.beneficiaryBps(BEN_B) == 3000, "BEN_B bps wrong");
+    }
+
+    function testConstructorRejectsBadKeeperBps() public {
+        vm.expectRevert(KinVault.InvalidBps.selector);
+        new KinVault(
+            OWNER, address(borrowerOps), address(priceFeed), address(musd), address(mezo), HEARTBEAT, 10001
+        );
     }
 
     function _fundAndSetupBeneficiaries() internal {

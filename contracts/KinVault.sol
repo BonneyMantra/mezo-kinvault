@@ -17,8 +17,16 @@ interface IPriceFeed {
 interface IERC20 {
     function balanceOf(address account) external view returns (uint256);
     function transfer(address to, uint256 amount) external returns (bool);
+    function transferFrom(address from, address to, uint256 amount) external returns (bool);
 }
 
+/// @title KinVault — Bitcoin beneficiary rehearsal + emergency MUSD liquidity on Mezo
+/// @notice An owner locks BTC, names beneficiaries, and keeps a heartbeat alive.
+///         If the heartbeat lapses, anyone can trigger release: the vault borrows
+///         MUSD against the BTC via Mezo BorrowerOperations and distributes it to
+///         beneficiaries. An optional MEZO bond rewards the keeper who triggers
+///         release and tops up beneficiaries. Beneficiaries can rehearse their
+///         claim on-chain at any time to prove readiness.
 contract KinVault {
     error InvalidAddress();
     error InvalidInterval();
@@ -30,10 +38,11 @@ contract KinVault {
     error HeartbeatStillActive(uint256 releaseAt);
     error EmptyVault();
     error InsufficientCollateral();
-    error TroveOpenFailed();
     error TransferFailed();
     error BeneficiaryExists();
     error NoBeneficiaries();
+    error NotBeneficiary();
+    error ZeroAmount();
 
     struct Beneficiary {
         address addr;
@@ -47,17 +56,31 @@ contract KinVault {
     event TroveOpened(uint256 collateral, uint256 debtBorrowed, uint256 musdReceived);
     event InheritanceMUSDDistributed(address indexed beneficiary, uint256 amount, uint16 bps);
     event VaultReleased(uint256 totalMUSD, uint256 beneficiaryCount, uint256 releasedAt);
+    // MEZO utility
+    event MezoBondFunded(address indexed owner, uint256 amount, uint256 totalBond);
+    event MezoKeeperRewardPaid(address indexed keeper, uint256 amount);
+    event MezoBeneficiaryRewardPaid(address indexed beneficiary, uint256 amount, uint16 bps);
+    // Rehearsal
+    event BeneficiaryRehearsed(address indexed beneficiary, uint256 at, uint16 bps);
 
     address public immutable owner;
     IBorrowerOperations public immutable borrowerOps;
     IPriceFeed public immutable priceFeed;
     IERC20 public immutable musd;
+    IERC20 public immutable mezo;
     uint256 public immutable heartbeatInterval;
+    /// @notice Portion of the MEZO bond paid to whoever triggers release (basis points).
+    uint16 public immutable keeperRewardBps;
 
     uint256 public lastHeartbeatAt;
     bool public released;
     Beneficiary[] public beneficiaries;
     uint256 public totalBps;
+
+    /// @notice MEZO tokens locked as a keeper/beneficiary bond.
+    uint256 public mezoBond;
+    /// @notice Last time each beneficiary rehearsed their claim. 0 = never.
+    mapping(address => uint256) public rehearsalAt;
 
     uint256 private constant PRECISION = 1e18;
     uint256 private constant BPS_BASE = 10000;
@@ -79,18 +102,26 @@ contract KinVault {
         address borrowerOps_,
         address priceFeed_,
         address musd_,
-        uint256 heartbeatInterval_
+        address mezo_,
+        uint256 heartbeatInterval_,
+        uint16 keeperRewardBps_
     ) {
-        if (owner_ == address(0) || borrowerOps_ == address(0) || priceFeed_ == address(0) || musd_ == address(0)) {
+        if (
+            owner_ == address(0) || borrowerOps_ == address(0) || priceFeed_ == address(0) || musd_ == address(0)
+                || mezo_ == address(0)
+        ) {
             revert InvalidAddress();
         }
         if (heartbeatInterval_ == 0) revert InvalidInterval();
+        if (keeperRewardBps_ > uint16(BPS_BASE)) revert InvalidBps();
 
         owner = owner_;
         borrowerOps = IBorrowerOperations(borrowerOps_);
         priceFeed = IPriceFeed(priceFeed_);
         musd = IERC20(musd_);
+        mezo = IERC20(mezo_);
         heartbeatInterval = heartbeatInterval_;
+        keeperRewardBps = keeperRewardBps_;
         lastHeartbeatAt = block.timestamp;
 
         emit Heartbeat(owner_, block.timestamp);
@@ -108,6 +139,15 @@ contract KinVault {
     function heartbeat() external onlyOwner notReleased {
         lastHeartbeatAt = block.timestamp;
         emit Heartbeat(msg.sender, block.timestamp);
+    }
+
+    /// @notice Owner funds a MEZO bond. Owner must approve this contract for `amount` first.
+    function fundMezoBond(uint256 amount) external onlyOwner notReleased {
+        if (amount == 0) revert ZeroAmount();
+        bool ok = mezo.transferFrom(msg.sender, address(this), amount);
+        if (!ok) revert TransferFailed();
+        mezoBond += amount;
+        emit MezoBondFunded(msg.sender, amount, mezoBond);
     }
 
     function addBeneficiary(address addr_, uint16 bps_) external onlyOwner notReleased {
@@ -136,6 +176,16 @@ contract KinVault {
         beneficiaries.pop();
 
         emit BeneficiaryRemoved(removed.addr, removed.bps, index);
+    }
+
+    /// @notice A configured beneficiary rehearses their claim on-chain to prove readiness.
+    ///         Does not move funds; records a timestamp and emits an event.
+    function rehearseClaim() external returns (uint16 bps) {
+        (bool found, uint16 b) = _beneficiaryBps(msg.sender);
+        if (!found) revert NotBeneficiary();
+        rehearsalAt[msg.sender] = block.timestamp;
+        emit BeneficiaryRehearsed(msg.sender, block.timestamp, b);
+        return b;
     }
 
     function release() external notReleased {
@@ -176,6 +226,38 @@ contract KinVault {
         }
 
         emit VaultReleased(distributed, len, block.timestamp);
+
+        _payMezoRewards(len);
+    }
+
+    /// @dev Pays the keeper (msg.sender) a portion of the MEZO bond, then splits
+    ///      the remainder among beneficiaries by BPS. No-op if the bond is empty.
+    function _payMezoRewards(uint256 len) internal {
+        uint256 bond = mezoBond;
+        if (bond == 0) return;
+        mezoBond = 0;
+
+        uint256 keeperReward = (bond * keeperRewardBps) / BPS_BASE;
+        if (keeperReward > 0) {
+            bool ok = mezo.transfer(msg.sender, keeperReward);
+            if (!ok) revert TransferFailed();
+            emit MezoKeeperRewardPaid(msg.sender, keeperReward);
+        }
+
+        uint256 remaining = bond - keeperReward;
+        if (remaining == 0) return;
+
+        uint256 paid;
+        for (uint256 i; i < len; i++) {
+            uint256 share =
+                (i == len - 1) ? remaining - paid : (remaining * beneficiaries[i].bps) / BPS_BASE;
+            if (share > 0) {
+                bool ok = mezo.transfer(beneficiaries[i].addr, share);
+                if (!ok) revert TransferFailed();
+                emit MezoBeneficiaryRewardPaid(beneficiaries[i].addr, share, beneficiaries[i].bps);
+                paid += share;
+            }
+        }
     }
 
     function _computeNetDebt(uint256 collateral, uint256 price) internal view returns (uint256) {
@@ -191,8 +273,33 @@ contract KinVault {
         return netDebt;
     }
 
+    function _beneficiaryBps(address who) internal view returns (bool found, uint16 bps) {
+        uint256 len = beneficiaries.length;
+        for (uint256 i; i < len; i++) {
+            if (beneficiaries[i].addr == who) return (true, beneficiaries[i].bps);
+        }
+        return (false, 0);
+    }
+
+    // ─── Views ───────────────────────────────────────────────────────────
+
+    function isBeneficiary(address who) external view returns (bool) {
+        (bool found,) = _beneficiaryBps(who);
+        return found;
+    }
+
+    function beneficiaryBps(address who) external view returns (uint16) {
+        (, uint16 bps) = _beneficiaryBps(who);
+        return bps;
+    }
+
+    function hasRehearsed(address who) external view returns (bool) {
+        return rehearsalAt[who] != 0;
+    }
+
     function canRelease() external view returns (bool) {
-        return !released && block.timestamp >= lastHeartbeatAt + heartbeatInterval && totalBps == BPS_BASE;
+        return !released && block.timestamp >= lastHeartbeatAt + heartbeatInterval && totalBps == BPS_BASE
+            && address(this).balance > 0;
     }
 
     function releaseAt() public view returns (uint256) {
