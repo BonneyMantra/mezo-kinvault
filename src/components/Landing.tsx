@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import {
   ArrowRight,
@@ -40,6 +41,13 @@ const steps = [
 export function Landing() {
   const { price: btcPrice } = useBtcPrice();
   const vault = useKinVaultState();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const fmtBtc = vault.vaultBalance
     ? Number(formatEther(vault.vaultBalance)).toFixed(4)
@@ -50,7 +58,7 @@ export function Landing() {
 
   return (
     <div className="landing">
-      <nav className="landingNav">
+      <nav className={`landingNav ${scrolled ? "navScrolled" : ""}`}>
         <a className="brandLockup" href="/" aria-label="KinVault home">
           <span className="brandMark">
             <LockKeyhole size={18} strokeWidth={1.8} />
