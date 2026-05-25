@@ -38,29 +38,29 @@ export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
               onClick={openConnectModal}
             >
               <Wallet size={15} />
-              Connect Wallet
+              Connect
             </button>
           );
         }
 
         return (
-          <div className="walletPill">
-            <span className="walletBal">{btc} BTC</span>
-            <button
-              className="walletAccount"
-              type="button"
-              onClick={openAccountModal}
-            >
+          <button
+            className="sidebarAccount"
+            type="button"
+            onClick={openAccountModal}
+          >
+            <span className="sidebarBal">{btc} BTC</span>
+            <span className="sidebarAddr">
               <img
                 className="walletAvatar"
                 src={dicebear(account.address)}
                 alt=""
-                width={22}
-                height={22}
+                width={18}
+                height={18}
               />
               {shortAddr(account.address)}
-            </button>
-          </div>
+            </span>
+          </button>
         );
       }}
     </ConnectButton.Custom>

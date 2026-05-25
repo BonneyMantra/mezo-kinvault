@@ -19,6 +19,7 @@ export const mezoPassportConfig = getConfig({
   appUrl: "https://mezo-kinvault.vercel.app",
   mezoNetwork: "testnet",
   walletConnectProjectId: projectId,
+  multiInjectedProviderDiscovery: false,
   wallets: [
     {
       groupName: "Bitcoin",
