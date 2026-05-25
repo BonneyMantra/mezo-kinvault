@@ -4,7 +4,6 @@ import {
   ArrowRight,
   HeartPulse,
   Lock,
-  LockKeyhole,
   Send,
   Shield,
   Users,
@@ -60,9 +59,13 @@ export function Landing() {
     <div className="landing">
       <nav className={`landingNav ${scrolled ? "navScrolled" : ""}`}>
         <a className="brandLockup" href="/" aria-label="KinVault home">
-          <span className="brandMark">
-            <LockKeyhole size={18} strokeWidth={1.8} />
-          </span>
+          <img
+            className="brandLogo"
+            src="/logo.png"
+            alt="KinVault"
+            width={34}
+            height={34}
+          />
           <span>
             <strong>KinVault</strong>
           </span>
@@ -257,7 +260,13 @@ export function Landing() {
 
       <footer className="landingFooter">
         <div className="footerBrand">
-          <LockKeyhole size={16} />
+          <img
+            className="brandLogo"
+            src="/logo.png"
+            alt="KinVault"
+            width={20}
+            height={20}
+          />
           <span>KinVault</span>
         </div>
         <p>

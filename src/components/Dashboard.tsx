@@ -3,7 +3,6 @@ import {
   Activity,
   ArrowLeft,
   HeartPulse,
-  LockKeyhole,
   Plus,
   RotateCcw,
   Trash2,
@@ -188,7 +187,13 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
       <header className="dashHeader">
         <button className="backBtn" type="button" onClick={() => disconnect()}>
           <ArrowLeft size={16} />
-          <LockKeyhole size={16} strokeWidth={1.8} />
+          <img
+            className="brandLogo"
+            src="/logo.png"
+            alt="KinVault"
+            width={22}
+            height={22}
+          />
           <strong>KinVault</strong>
         </button>
         <div className="dashRole">

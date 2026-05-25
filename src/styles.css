@@ -116,6 +116,13 @@ button {
   color: var(--copper);
 }
 
+.brandLogo {
+  display: block;
+  object-fit: contain;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
 .brandLockup strong {
   font-family: "Sora", sans-serif;
   font-size: 1.1rem;

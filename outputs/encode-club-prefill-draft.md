@@ -47,11 +47,6 @@ https://github.com/BonneyMantra/mezo-kinvault
 
 ### Demo URL
 ```
-https://mezo-kinvault.pages.dev
-```
-
-### Alternative Demo URL (Vercel mirror)
-```
 https://mezo-kinvault.vercel.app
 ```
 

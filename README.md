@@ -60,7 +60,7 @@ cast send <VAULT> "deposit()" --value 0.035ether --rpc-url https://rpc.test.mezo
 
 - **Contract:** [`0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb`](https://explorer.test.mezo.org/address/0xa6a621e9C92fb8DFC963d2C20e8C5CB4C5178cBb) on Mezo Testnet (chain 31611)
 - **Tx:** [`0x44e2ea9a...`](https://explorer.test.mezo.org/tx/0x44e2ea9aa50b61998790909374103efb1937c80387455c033ded7668828100b5)
-- **Frontend:** [mezo-kinvault.pages.dev](https://mezo-kinvault.pages.dev) | [mezo-kinvault.vercel.app](https://mezo-kinvault.vercel.app)
+- **Frontend:** [mezo-kinvault.vercel.app](https://mezo-kinvault.vercel.app)
 - **Collateral:** 0.035 BTC deposited, 2 beneficiaries (70/30 split)
 
 ## Mezo Contract Addresses Used
