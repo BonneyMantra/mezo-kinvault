@@ -126,7 +126,7 @@ Portal requires Gabriel to log in to Encode Club account to submit. Cannot be pr
 | GitHub repo | https://github.com/gabrielantonyxaviour/mezo-kinvault |
 | Demo URL | https://mezo-kinvault.vercel.app |
 | Video URL | *(not created — see next steps)* |
-| Team member 1 | Gabriel Antony Xavier / gabrielantony56@gmail.com |
+| Team member 1 | Gabriel Antony Xaviour / gabrielantony56@gmail.com |
 | Track | Mezo Integration / MUSD |
 | Long description | (see EXECUTION_PACKET.md demo script section) |
 

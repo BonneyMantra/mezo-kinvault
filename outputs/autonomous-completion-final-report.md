@@ -19,7 +19,7 @@ KinVault is **fully deployed and live**. Contract on Mezo Testnet, frontend on V
 | Role | Name | GitHub | Email |
 |------|------|--------|-------|
 | Primary submitter | Bonney | `BonneyMantra` | `1inchunitedefi@gmail.com` |
-| Co-member | Gabriel Antony Xavier | `gabrielantonyxaviour` | `gabrielantony56@gmail.com` |
+| Co-member | Gabriel Antony Xaviour | `gabrielantonyxaviour` | `gabrielantony56@gmail.com` |
 | Co-member | KaizokuJoel | (display only) | `loganfernando69@gmail.com` |
 
 **Reason for reassignment:** Encode Club enforces one-project-per-account. Gabriel's account is reserved for another submission.

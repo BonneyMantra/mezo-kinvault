@@ -1,22 +1,22 @@
 # Team And Ownership
 
-Status: **Bonney (BonneyMantra) — mid-flight reassignment (2026-05-25)**
+Status: **Gabriel Antony Xaviour — primary submitter (2026-05-25). Project SUBMITTED on Encode Club.**
 
-Encode Club enforces one-project-per-account. Gabriel's account is reserved for another submission, so primary ownership is reassigned to Bonney.
+Bonney's Encode Club application was still pending review, so primary submission was reassigned to Gabriel (already an accepted/Registered participant). Gabriel created the KinVault project and submitted it; Bonney and KaizokuJoel joined the team via the project join code (`[team join code — shared privately]`) — which worked even while Bonney's application was pending. The GitHub repo remains under BonneyMantra.
 
 ## Primary Submitter
 
-- Person: **Bonney**
-- Chrome profile directory: `Profile 2`
-- Chrome profile display name: `Hackathon - Bonney`
-- Email: `1inchunitedefi@gmail.com`
-- GitHub: `BonneyMantra`
-- Ownership role: final hackathon submitter, GitHub repo owner, submission portal owner.
+- Person: **Gabriel Antony Xaviour**
+- Chrome profile directory: `Default`
+- Chrome profile display name: `Gabriel`
+- Email: `gabrielantony56@gmail.com`
+- GitHub: `gabrielantonyxaviour`
+- Encode Club status: **Registered** (accepted) — project Leader / final submitter.
 
-## Co-Members
+## Co-Members (joined via team join code `[team join code — shared privately]`)
 
-- **Gabriel Antony Xavier** — `gabrielantonyxaviour` — `gabrielantony56@gmail.com` (Chrome `Default`)
-- **KaizokuJoel** — display only — `loganfernando69@gmail.com` (Chrome `Profile 5`)
+- **Bonney Mantra** — `BonneyMantra` — `1inchunitedefi@gmail.com` (Chrome `Profile 2`) — owns the GitHub repo `BonneyMantra/mezo-kinvault`
+- **KaizokuJoel** (Joel Peter) — `loganfernando69@gmail.com` (Chrome `Profile 5`)
 
 ## Registry Candidates (original list)
 
