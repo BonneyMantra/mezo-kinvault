@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
   useBalance,
+  useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
   useDisconnect,
@@ -90,6 +91,24 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   // Gas pre-check: block all transactions if the wallet can't cover gas.
   const balanceLoaded = nativeBalance !== undefined;
   const insufficientGas = balanceLoaded && nativeBalance.value < GAS_FLOOR;
+
+  // Simulate key transactions to catch contract reverts before sending.
+  const heartbeatSim = useSimulateContract({
+    address: MEZO_ADDRESSES.kinVault,
+    abi: KINVAULT_ABI,
+    functionName: "heartbeat",
+    query: { enabled: !insufficientGas && !!address },
+  });
+  const releaseSim = useSimulateContract({
+    address: MEZO_ADDRESSES.kinVault,
+    abi: KINVAULT_ABI,
+    functionName: "release",
+    query: { enabled: !insufficientGas && !!address },
+  });
+
+  const heartbeatBlocked = !heartbeatSim.isSuccess;
+  const releaseBlocked = !releaseSim.isSuccess;
+
   const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
   const { beneficiaries, refetch: refetchBens } = useBeneficiaries(benCount);
 
@@ -154,6 +173,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
       vault.refetch();
       refetchBens();
       benStatus.refetch();
+      heartbeatSim.refetch();
+      releaseSim.refetch();
       setTimeout(() => setTxStatus(""), 3000);
     }
   }, [txConfirmed]);
@@ -170,12 +191,9 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   };
 
   const doHeartbeat = () => {
+    if (!heartbeatSim.data?.request) return;
     setTxStatus("Recording heartbeat...");
-    writeContract({
-      address: MEZO_ADDRESSES.kinVault,
-      abi: KINVAULT_ABI,
-      functionName: "heartbeat",
-    });
+    writeContract(heartbeatSim.data.request);
   };
 
   const doAddBeneficiary = () => {
@@ -202,12 +220,9 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
   };
 
   const doRelease = () => {
+    if (!releaseSim.data?.request) return;
     setTxStatus("Releasing vault — opening MUSD trove...");
-    writeContract({
-      address: MEZO_ADDRESSES.kinVault,
-      abi: KINVAULT_ABI,
-      functionName: "release",
-    });
+    writeContract(releaseSim.data.request);
   };
 
   const doRehearse = () => {
@@ -224,8 +239,8 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
     : undefined;
 
   const statusCopy = {
-    active: { eyebrow: "Heartbeat active", title: "Release blocked" },
-    ready: { eyebrow: "Heartbeat missed", title: "Release available" },
+    active: { eyebrow: "Owner check-in active", title: "Release blocked" },
+    ready: { eyebrow: "Check-in missed", title: "Release available" },
     released: { eyebrow: "Vault released", title: "MUSD distributed" },
   };
   const copy = statusCopy[scenario];
@@ -435,22 +450,33 @@ export function Dashboard({ passportEnabled }: { passportEnabled: boolean }) {
             </div>
           </div>
 
+          <div className="checkinNote">
+            <strong>Demo check-in: 60 seconds</strong>
+            <span>
+              Production vaults should use monthly or quarterly check-ins with
+              reminders and a grace period.
+            </span>
+          </div>
+
           <div className="controlRail">
             {isOwner && !vault.released && (
               <button
                 className="actionBtn"
                 type="button"
                 onClick={doHeartbeat}
-                disabled={insufficientGas}
+                disabled={insufficientGas || heartbeatBlocked}
               >
-                <RotateCcw size={15} /> Heartbeat
+                <RotateCcw size={15} /> Refresh check-in
               </button>
             )}
             <button
               className="actionBtn release"
               type="button"
               disabled={
-                scenario !== "ready" || !vault.canRelease || insufficientGas
+                scenario !== "ready" ||
+                !vault.canRelease ||
+                insufficientGas ||
+                releaseBlocked
               }
               onClick={doRelease}
             >
