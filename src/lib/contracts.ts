@@ -6,8 +6,8 @@ export const MEZO_ADDRESSES = {
   priceFeed: "0x86bCF0841622a5dAC14A313a15f96A95421b9366",
   musd: "0x118917a40FAF1CD7a13dB0Ef56C86De7973Ac503",
   mezo: "0x7B7c000000000000000000000000000000000001" as `0x${string}`,
-  // KinVault v3 — MEZO bond + keeper reward + beneficiary rehearsal
-  kinVault: "0x15ad9d57A5A6Fea6b7efdA228ef117a4A7ed9ef9" as `0x${string}`,
+  // KinVault v4 — fresh empty vault for demo recording
+  kinVault: "0xB0FC35262d8383bE97b90D01b3F5572007E7A10E" as `0x${string}`,
 } as const;
 
 export const KINVAULT_ABI = [
