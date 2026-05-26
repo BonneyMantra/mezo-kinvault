@@ -510,14 +510,16 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
                 <RotateCcw size={15} /> Check-in
               </button>
             )}
-            <button
-              className="actionBtn release"
-              type="button"
-              disabled={releaseDisabled}
-              onClick={doRelease}
-            >
-              <Activity size={15} /> {releaseLabel}
-            </button>
+            {!isOwner && (
+              <button
+                className="actionBtn release"
+                type="button"
+                disabled={releaseDisabled}
+                onClick={doRelease}
+              >
+                <Activity size={15} /> {releaseLabel}
+              </button>
+            )}
           </div>
         </motion.div>
 
