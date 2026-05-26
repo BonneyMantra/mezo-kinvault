@@ -77,20 +77,24 @@ export function useActivityFeed() {
 }
 
 /** Live Mezo trove health for the vault: collateral ratio + liquidation price. */
-export function useTroveHealth(price: bigint | undefined) {
+export function useTroveHealth(
+  price: bigint | undefined,
+  vault?: `0x${string}`,
+) {
+  const target = vault ?? vaultAddress;
   const result = useReadContracts({
     contracts: [
       {
         address: MEZO_ADDRESSES.troveManager as `0x${string}`,
         abi: TROVE_MANAGER_ABI,
         functionName: "getEntireDebtAndColl",
-        args: [vaultAddress],
+        args: [target],
       },
       {
         address: MEZO_ADDRESSES.troveManager as `0x${string}`,
         abi: TROVE_MANAGER_ABI,
         functionName: "getTroveStatus",
-        args: [vaultAddress],
+        args: [target],
       },
     ],
     query: { refetchInterval: 15000 },
@@ -125,10 +129,12 @@ export function useTroveHealth(price: bigint | undefined) {
 /** Per-beneficiary rehearsal status + MUSD actually received. */
 export function useBeneficiaryDetails(
   beneficiaries: { addr: `0x${string}`; bps: number }[],
+  vault?: `0x${string}`,
 ) {
+  const target = vault ?? vaultAddress;
   const contracts = beneficiaries.flatMap((b) => [
     {
-      address: vaultAddress,
+      address: target,
       abi: KINVAULT_ABI,
       functionName: "hasRehearsed" as const,
       args: [b.addr] as const,

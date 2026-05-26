@@ -11,8 +11,14 @@ const usd = (v: bigint | undefined) =>
     ? `$${Number(formatEther(v)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
     : "—";
 
-export function CollateralHealth({ price }: { price: bigint | undefined }) {
-  const trove = useTroveHealth(price);
+export function CollateralHealth({
+  price,
+  vaultAddress,
+}: {
+  price: bigint | undefined;
+  vaultAddress?: `0x${string}`;
+}) {
+  const trove = useTroveHealth(price, vaultAddress);
   const icrPct = pct(trove.icr);
 
   // Bar maps 100%–200% ICR onto 0–100% width; markers at 110 (MCR) and 130 (safety).

@@ -1972,6 +1972,12 @@ button {
   color: var(--text);
 }
 
+.faucetBanner.warn {
+  background: rgba(245, 166, 35, 0.1);
+  border-color: rgba(245, 166, 35, 0.28);
+  color: #f5a623;
+}
+
 .faucetBtn {
   flex-shrink: 0;
   padding: 8px 16px;

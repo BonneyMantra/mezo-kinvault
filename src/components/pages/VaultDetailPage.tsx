@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import {
   Activity,
+  AlertTriangle,
   ArrowLeft,
   Droplet,
   ExternalLink,
@@ -8,7 +9,6 @@ import {
   Plus,
   RotateCcw,
   ShieldCheck,
-  Trash2,
   Users,
   Wallet,
 } from "lucide-react";
@@ -28,6 +28,8 @@ import { KINVAULT_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
 import { useMezoRiskParams } from "../../hooks/useKinVault";
 import { type VaultMetaWithAddress } from "../../lib/vaultMeta";
+import { CollateralHealth } from "../dashboard/CollateralHealth";
+import { BeneficiaryCards } from "../dashboard/BeneficiaryCards";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 const GAS_FLOOR = parseEther("0.0001");
@@ -170,6 +172,23 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     return ((maxDebt - gasComp) * 10n ** 18n) / (10n ** 18n + rate);
   }, [vaultBalance, btcPrice]);
 
+  const minBtcNeeded = useMemo(() => {
+    if (!btcPrice || !risk.minNetDebt) return undefined;
+    const gasComp = risk.gasCompensation ?? 200n * 10n ** 18n;
+    const rate = risk.borrowingRate ?? 10n ** 15n;
+    const totalDebtNeeded =
+      risk.minNetDebt + (risk.minNetDebt * rate) / 10n ** 18n + gasComp;
+    const btcWei = (totalDebtNeeded * (13n * 10n ** 17n)) / btcPrice;
+    return btcWei;
+  }, [btcPrice, risk.minNetDebt, risk.gasCompensation, risk.borrowingRate]);
+
+  const insufficientCollateral =
+    hasDeposit &&
+    estimatedMusd === 0n &&
+    minBtcNeeded !== undefined &&
+    vaultBalance !== undefined &&
+    vaultBalance < minBtcNeeded;
+
   const scenario: "active" | "ready" | "released" = released
     ? "released"
     : secondsRemaining === 0 && hasDeposit
@@ -261,12 +280,15 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     !hasDeposit ||
     scenario !== "ready" ||
     insufficientGas ||
+    insufficientCollateral ||
     !releaseSim.isSuccess;
   const releaseLabel = !hasDeposit
     ? "No BTC deposited"
-    : scenario !== "ready"
-      ? "Release MUSD"
-      : "Release MUSD";
+    : insufficientCollateral
+      ? "Insufficient BTC"
+      : scenario !== "ready"
+        ? "Release MUSD"
+        : "Release MUSD";
 
   return (
     <div className="pageContainer">
@@ -303,6 +325,23 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
           >
             Get testnet BTC
           </a>
+        </div>
+      )}
+
+      {insufficientCollateral && (
+        <div className="faucetBanner warn">
+          <AlertTriangle size={16} />
+          <span>
+            Vault needs at least{" "}
+            <strong>
+              {minBtcNeeded
+                ? Number(formatEther(minBtcNeeded)).toFixed(4)
+                : "—"}{" "}
+              BTC
+            </strong>{" "}
+            to meet the {fmt(risk.minNetDebt)} MUSD minimum debt. Current
+            deposit: {fmtBtc(vaultBalance)} BTC.
+          </span>
         </div>
       )}
 
@@ -491,23 +530,16 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
           </h3>
 
           {beneficiaries.length > 0 ? (
-            <ol className="explorerBenList">
-              {beneficiaries.map((b, i) => (
-                <li key={b.addr}>
-                  <span className="benAddr">{shortAddress(b.addr)}</span>
-                  <span className="benPct">{(b.bps / 100).toFixed(1)}%</span>
-                  {isOwner && !released && (
-                    <button
-                      className="benRemoveBtn"
-                      type="button"
-                      onClick={() => doRemoveBen(i)}
-                    >
-                      <Trash2 size={13} />
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ol>
+            <BeneficiaryCards
+              beneficiaries={beneficiaries}
+              estimatedMusd={estimatedMusd}
+              released={released}
+              isOwner={!!isOwner}
+              connected={address}
+              onRemove={doRemoveBen}
+              disabled={insufficientGas}
+              vaultAddress={vaultAddress}
+            />
           ) : (
             <div className="emptyBenPrompt">
               <Users size={20} />
@@ -547,6 +579,8 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
           )}
         </motion.div>
       </div>
+
+      <CollateralHealth price={btcPrice} vaultAddress={vaultAddress} />
     </div>
   );
 }

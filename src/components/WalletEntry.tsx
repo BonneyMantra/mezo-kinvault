@@ -14,7 +14,13 @@ export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
     query: { refetchInterval: 15000 },
   });
 
-  const btc = bal ? Number(formatEther(bal.value)).toFixed(4) : "…";
+  const btcNum = bal ? Number(formatEther(bal.value)) : null;
+  const btc =
+    btcNum === null
+      ? "…"
+      : btcNum < 0.0001 && btcNum > 0
+        ? btcNum.toFixed(6)
+        : btcNum.toFixed(4);
 
   if (!passportEnabled) {
     return (

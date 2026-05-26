@@ -19,6 +19,7 @@ type Props = {
   connected: `0x${string}` | undefined;
   onRemove: (i: number) => void;
   disabled: boolean;
+  vaultAddress?: `0x${string}`;
 };
 
 export function BeneficiaryCards({
@@ -29,8 +30,9 @@ export function BeneficiaryCards({
   connected,
   onRemove,
   disabled,
+  vaultAddress,
 }: Props) {
-  const { details } = useBeneficiaryDetails(beneficiaries);
+  const { details } = useBeneficiaryDetails(beneficiaries, vaultAddress);
 
   return (
     <ul className="benCards">
