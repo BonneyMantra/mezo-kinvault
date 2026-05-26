@@ -138,7 +138,7 @@ export function AppShell({ passportEnabled }: { passportEnabled: boolean }) {
 
       {showOnboarding && (
         <OnboardingModal
-          isBeneficiary={Boolean(isBeneficiary)}
+          isBeneficiary={false}
           onChoice={handleOnboardingChoice}
         />
       )}
