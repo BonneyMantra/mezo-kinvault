@@ -26,7 +26,7 @@ import { parseEther, formatEther } from "viem";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 // Flat gas floor — Mezo gas is cheap, this covers any contract call.
-const GAS_FLOOR = parseEther("0.0001");
+const GAS_FLOOR = parseEther("0.000001");
 import { shortAddress, PROOF, explorerAddress, explorerTx } from "../lib/proof";
 import { KINVAULT_ABI, MEZO_ADDRESSES } from "../lib/contracts";
 import {

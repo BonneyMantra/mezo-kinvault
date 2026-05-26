@@ -37,7 +37,7 @@ import {
 import { VaultDetailPage } from "./VaultDetailPage";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
-const GAS_FLOOR = parseEther("0.0001");
+const GAS_FLOOR = parseEther("0.000001");
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const fmtBtc = (wei: bigint | undefined) =>

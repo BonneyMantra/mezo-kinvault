@@ -32,7 +32,7 @@ import { CollateralHealth } from "../dashboard/CollateralHealth";
 import { BeneficiaryCards } from "../dashboard/BeneficiaryCards";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
-const GAS_FLOOR = parseEther("0.0001");
+const GAS_FLOOR = parseEther("0.000001");
 const ease = [0.22, 1, 0.36, 1] as const;
 const explorerTx = (hash: string) =>
   `https://explorer.test.mezo.org/tx/${hash}`;
