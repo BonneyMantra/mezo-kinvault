@@ -53,6 +53,44 @@ export async function getVaultsByOwnerMeta(
   }
 }
 
+export async function relayCreateVault(params: {
+  heartbeatInterval: number;
+  beneficiaries: { address: string; bps: number }[];
+  owner: string;
+  name?: string;
+  description?: string;
+  coverImage?: string;
+}): Promise<{
+  vaultAddress?: string;
+  createTxHash?: string;
+  error?: string;
+}> {
+  try {
+    const res = await fetch(`${API_BASE}/create-vault`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(params),
+    });
+    const data = (await res.json()) as {
+      ok?: boolean;
+      vaultAddress?: string;
+      createTxHash?: string;
+      error?: string;
+    };
+    if (!res.ok || data.error) {
+      return { error: data.error ?? "Creation failed" };
+    }
+    return {
+      vaultAddress: data.vaultAddress,
+      createTxHash: data.createTxHash,
+    };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Network error",
+    };
+  }
+}
+
 export async function relayRelease(
   vaultAddress: string,
 ): Promise<{ txHash?: string; error?: string }> {

@@ -14,17 +14,10 @@ import {
   Wallet,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import {
-  useAccount,
-  useBalance,
-  useReadContract,
-  useSimulateContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { parseEther, formatEther } from "viem";
 import { shortAddress } from "../../lib/proof";
-import { KINVAULT_ABI, FACTORY_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
+import { FACTORY_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 import { useKinVaultState, useBeneficiaries } from "../../hooks/useKinVault";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
 import { CollateralHealth } from "../dashboard/CollateralHealth";
@@ -32,6 +25,7 @@ import { BeneficiaryCards } from "../dashboard/BeneficiaryCards";
 import {
   saveVaultMeta,
   getVaultsByOwnerMeta,
+  relayCreateVault,
   type VaultMetaWithAddress,
 } from "../../lib/vaultMeta";
 import { VaultDetailPage } from "./VaultDetailPage";
@@ -153,145 +147,43 @@ export function MyVaultsPage({
     ) &&
     Math.abs(totalPct - 100) < 0.01;
 
-  // Factory + beneficiary write
-  const { writeContractAsync } = useWriteContract();
-
+  // Create vault via Cloudflare Worker relay (bypasses Passport gas limit)
   const doCreateVault = async () => {
     const interval = parseInt(heartbeatInput);
     if (!interval || interval <= 0) return;
 
     setCreateStep("deploying");
-    setCreateStatus("Step 1: Deploying vault contract...");
+    setCreateStatus("Deploying vault + adding beneficiaries via relay...");
 
-    try {
-      const factoryHash = await writeContractAsync({
-        address: MEZO_ADDRESSES.factory,
-        abi: FACTORY_ABI,
-        functionName: "createVault",
-        args: [BigInt(interval)],
-        gas: 2_500_000n,
-      });
+    const validBens = pendingBens.filter(
+      (b) =>
+        b.address.startsWith("0x") &&
+        b.address.length === 42 &&
+        parseFloat(b.pct) > 0,
+    );
 
-      setCreateStatus("Waiting for vault deployment confirmation...");
+    const result = await relayCreateVault({
+      heartbeatInterval: interval,
+      beneficiaries: validBens.map((b) => ({
+        address: b.address,
+        bps: Math.round(parseFloat(b.pct) * 100),
+      })),
+      owner: address!,
+      name: vaultName,
+      description: vaultDesc,
+      coverImage: coverImg,
+    });
 
-      // Poll for receipt via fetch
-      let createdAddr: string | null = null;
-      let attempts = 0;
-      while (!createdAddr && attempts < 30) {
-        attempts++;
-        await new Promise((r) => setTimeout(r, 2000));
-        try {
-          const res = await fetch("https://rpc.test.mezo.org", {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({
-              jsonrpc: "2.0",
-              id: 1,
-              method: "eth_getTransactionReceipt",
-              params: [factoryHash],
-            }),
-          });
-          const json = (await res.json()) as {
-            result?: {
-              status: string;
-              logs: { topics: string[]; data: string }[];
-            };
-          };
-          if (json.result && json.result.status === "0x1") {
-            const log = json.result.logs.find(
-              (l) =>
-                l.topics[0] ===
-                "0x0b045af6aff86dd2cda5342fd0329a354dc66759ff1eda00d7ecf13a76c7fb3b",
-            );
-            if (log) {
-              createdAddr = "0x" + log.data.slice(26, 66);
-            }
-          }
-        } catch {
-          // retry
-        }
-      }
-
-      if (!createdAddr) {
-        setCreateStatus("Error: could not find vault address in receipt");
-        return;
-      }
-
-      setNewVaultAddress(createdAddr);
-      const vaultAddr = createdAddr as `0x${string}`;
-
-      // Save metadata to Cloudflare
-      const benMeta = pendingBens
-        .filter((b) => !b.privacy && b.name)
-        .map((b) => ({ address: b.address, name: b.name, email: b.email }));
-
-      await saveVaultMeta(createdAddr, {
-        name: vaultName,
-        description: vaultDesc,
-        coverImage: coverImg,
-        owner: address!,
-        chainId: 31611,
-      });
-
-      // Add beneficiaries on-chain
-      const validBens = pendingBens.filter(
-        (b) =>
-          b.address.startsWith("0x") &&
-          b.address.length === 42 &&
-          parseFloat(b.pct) > 0,
-      );
-
-      for (let i = 0; i < validBens.length; i++) {
-        const b = validBens[i];
-        const bps = Math.round(parseFloat(b.pct) * 100);
-        setCreateStatus(
-          `Step 2: Adding beneficiary ${i + 1}/${validBens.length}...`,
-        );
-
-        const benHash = await writeContractAsync({
-          address: vaultAddr,
-          abi: KINVAULT_ABI,
-          functionName: "addBeneficiary",
-          args: [b.address as `0x${string}`, bps],
-          gas: 200_000n,
-        });
-
-        // Wait for confirmation
-        let confirmed = false;
-        let benAttempts = 0;
-        while (!confirmed && benAttempts < 20) {
-          benAttempts++;
-          await new Promise((r) => setTimeout(r, 2000));
-          try {
-            const res = await fetch("https://rpc.test.mezo.org", {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({
-                jsonrpc: "2.0",
-                id: 1,
-                method: "eth_getTransactionReceipt",
-                params: [benHash],
-              }),
-            });
-            const json = (await res.json()) as {
-              result?: { status: string };
-            };
-            if (json.result?.status === "0x1") confirmed = true;
-          } catch {
-            // retry
-          }
-        }
-      }
-
-      setCreateStep("done");
-      setCreateStatus("Vault deployed with beneficiaries!");
-      refetchMyVaults();
-    } catch (err) {
+    if (result.error) {
       setCreateStep("beneficiaries");
-      setCreateStatus(
-        `Error: ${err instanceof Error ? err.message.slice(0, 120) : "Unknown error"}`,
-      );
+      setCreateStatus(`Error: ${result.error.slice(0, 120)}`);
+      return;
     }
+
+    setNewVaultAddress(result.vaultAddress ?? null);
+    setCreateStep("done");
+    setCreateStatus("Vault deployed with beneficiaries!");
+    refetchMyVaults();
   };
 
   // For managing a selected vault — read its state

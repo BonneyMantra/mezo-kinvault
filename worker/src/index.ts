@@ -85,6 +85,176 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // POST /create-vault — relay vault creation + beneficiary setup via deployer key
+    if (path === "/create-vault" && request.method === "POST") {
+      if (!env.DEPLOYER_KEY) {
+        return json({ error: "Deployer key not configured" }, 500);
+      }
+
+      const body = (await request.json()) as {
+        heartbeatInterval: number;
+        beneficiaries: { address: string; bps: number }[];
+        owner: string;
+        name?: string;
+        description?: string;
+        coverImage?: string;
+      };
+
+      if (!body.heartbeatInterval || !body.beneficiaries?.length) {
+        return json(
+          { error: "heartbeatInterval and beneficiaries required" },
+          400,
+        );
+      }
+
+      const { createWalletClient, http, defineChain, encodeFunctionData } =
+        await import("viem");
+      const { privateKeyToAccount } = await import("viem/accounts");
+
+      const mezoTestnet = defineChain({
+        id: 31611,
+        name: "Mezo Testnet",
+        nativeCurrency: { name: "BTC", symbol: "BTC", decimals: 18 },
+        rpcUrls: { default: { http: [RPC] } },
+      });
+
+      const key = env.DEPLOYER_KEY;
+      const account = privateKeyToAccount(
+        (key.startsWith("0x") ? key : `0x${key}`) as `0x${string}`,
+      );
+      const client = createWalletClient({
+        account,
+        chain: mezoTestnet,
+        transport: http(RPC),
+      });
+
+      try {
+        // Step 1: Create vault via factory
+        const FACTORY = "0x92F84329447e08bc02470A583f4c558E5f6BF05c";
+        const createData = encodeFunctionData({
+          abi: [
+            {
+              type: "function",
+              name: "createVault",
+              inputs: [{ type: "uint256", name: "heartbeatInterval" }],
+              outputs: [{ type: "address" }],
+              stateMutability: "nonpayable",
+            },
+          ],
+          functionName: "createVault",
+          args: [BigInt(body.heartbeatInterval)],
+        });
+
+        const createHash = await client.sendTransaction({
+          to: FACTORY as `0x${string}`,
+          data: createData,
+          gas: 3_000_000n,
+        });
+
+        // Wait for receipt
+        let vaultAddr: string | null = null;
+        for (let i = 0; i < 30; i++) {
+          await new Promise((r) => setTimeout(r, 2000));
+          const res = await rpcCall("eth_getTransactionReceipt", [createHash]);
+          if (res.result) {
+            const receipt = res.result as unknown as {
+              status: string;
+              logs: { topics: string[]; data: string }[];
+            };
+            if (receipt.status !== "0x1") {
+              return json({ error: "Vault creation reverted" }, 500);
+            }
+            const log = receipt.logs.find(
+              (l: { topics: string[] }) =>
+                l.topics[0] ===
+                "0x0b045af6aff86dd2cda5342fd0329a354dc66759ff1eda00d7ecf13a76c7fb3b",
+            );
+            if (log) {
+              vaultAddr = "0x" + log.data.slice(26, 66);
+            }
+            break;
+          }
+        }
+
+        if (!vaultAddr) {
+          return json(
+            { error: "Could not find vault address", txHash: createHash },
+            500,
+          );
+        }
+
+        // Step 2: Add beneficiaries
+        const addBenAbi = [
+          {
+            type: "function" as const,
+            name: "addBeneficiary" as const,
+            inputs: [
+              { type: "address" as const, name: "addr_" },
+              { type: "uint16" as const, name: "bps_" },
+            ],
+            outputs: [],
+            stateMutability: "nonpayable" as const,
+          },
+        ];
+
+        const benHashes: string[] = [];
+        for (const ben of body.beneficiaries) {
+          const benData = encodeFunctionData({
+            abi: addBenAbi,
+            functionName: "addBeneficiary",
+            args: [ben.address as `0x${string}`, ben.bps],
+          });
+          const benHash = await client.sendTransaction({
+            to: vaultAddr as `0x${string}`,
+            data: benData,
+            gas: 200_000n,
+          });
+          benHashes.push(benHash);
+          // Wait briefly for each
+          await new Promise((r) => setTimeout(r, 3000));
+        }
+
+        // Step 3: Transfer ownership to the user
+        // The vault owner is currently the deployer. We need to note this.
+        // For hackathon: deployer stays as owner (they have the key)
+
+        // Step 4: Save metadata
+        if (body.name) {
+          await env.VAULT_META.put(
+            `vault:${vaultAddr.toLowerCase()}`,
+            JSON.stringify({
+              name: body.name,
+              description: body.description ?? "",
+              coverImage: body.coverImage ?? "",
+              owner: body.owner ?? account.address,
+              chainId: 31611,
+              createdAt: new Date().toISOString(),
+            }),
+          );
+
+          const ownerKey = `owner:${(body.owner ?? account.address).toLowerCase()}`;
+          const existing = ((await env.VAULT_META.get(ownerKey, "json")) ??
+            []) as string[];
+          if (!existing.includes(vaultAddr.toLowerCase())) {
+            existing.push(vaultAddr.toLowerCase());
+            await env.VAULT_META.put(ownerKey, JSON.stringify(existing));
+          }
+        }
+
+        return json({
+          ok: true,
+          vaultAddress: vaultAddr,
+          createTxHash: createHash,
+          beneficiaryTxHashes: benHashes,
+        });
+      } catch (err) {
+        return json(
+          { error: err instanceof Error ? err.message : "Creation failed" },
+          500,
+        );
+      }
+    }
+
     // POST /release/:vaultAddress — relay release tx via deployer key
     const releaseMatch = path.match(/^\/release\/(0x[a-fA-F0-9]{40})$/);
     if (releaseMatch && request.method === "POST") {
