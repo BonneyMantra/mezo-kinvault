@@ -1,6 +1,6 @@
 import { motion } from "motion/react";
-import { Gift, ExternalLink, HeartPulse } from "lucide-react";
-import { useState } from "react";
+import { Gift, ExternalLink, HeartPulse, Search } from "lucide-react";
+import { useState, useEffect } from "react";
 import { formatEther } from "viem";
 import { shortAddress } from "../../lib/proof";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
@@ -9,12 +9,49 @@ import {
   type BenVault,
 } from "../../hooks/useBeneficiaryVaults";
 import { getVaultMeta, type VaultMeta } from "../../lib/vaultMeta";
-import { useEffect } from "react";
 import { VaultDetailPage } from "./VaultDetailPage";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 const fmtBtc = (wei: bigint) => Number(formatEther(wei)).toFixed(4);
+
+function ManualVaultLookup({
+  onFound,
+}: {
+  onFound: (addr: `0x${string}`) => void;
+}) {
+  const [input, setInput] = useState("");
+  const isValid = input.startsWith("0x") && input.length === 42;
+  return (
+    <div className="manualLookup">
+      <p
+        style={{
+          fontSize: "0.82rem",
+          color: "var(--muted)",
+          margin: "16px 0 8px",
+        }}
+      >
+        Or enter a vault address directly:
+      </p>
+      <div className="depositRow" style={{ maxWidth: 420 }}>
+        <input
+          type="text"
+          placeholder="0x vault address"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+        />
+        <button
+          className="actionBtn"
+          type="button"
+          disabled={!isValid}
+          onClick={() => onFound(input as `0x${string}`)}
+        >
+          <Search size={15} /> Open vault
+        </button>
+      </div>
+    </div>
+  );
+}
 
 export function BeneficiaryPage() {
   const { vaults, isLoading } = useBeneficiaryVaults();
@@ -76,9 +113,10 @@ export function BeneficiaryPage() {
           <h2>Not a beneficiary</h2>
           <p>
             Your connected wallet is not listed as a beneficiary in any vault.
-            If a vault owner has added you, make sure you&rsquo;re using the
-            correct wallet address.
+            Make sure vault owners add your <strong>Passport address</strong>{" "}
+            (shown in the sidebar) as the beneficiary.
           </p>
+          <ManualVaultLookup onFound={(addr) => setSelectedVault(addr)} />
         </motion.div>
       ) : (
         <div className="vaultGrid">
