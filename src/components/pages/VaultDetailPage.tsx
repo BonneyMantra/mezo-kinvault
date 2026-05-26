@@ -271,7 +271,7 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
   const doRelease = () => {
     if (!releaseSim.data?.request) return;
     toast.loading("Releasing — opening MUSD trove...");
-    writeContract(releaseSim.data.request);
+    writeContract({ ...releaseSim.data.request, gas: 5_000_000n });
   };
 
   const myBen = beneficiaries.find(
