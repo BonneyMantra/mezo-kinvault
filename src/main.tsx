@@ -5,6 +5,7 @@ import ReactDOM from "react-dom/client";
 import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider } from "wagmi";
+import { Toaster } from "sonner";
 import { App } from "./App";
 import {
   isPassportConfigured,
@@ -32,6 +33,17 @@ root.render(
           })}
         >
           <App passportEnabled={isPassportConfigured} />
+          <Toaster
+            theme="dark"
+            position="bottom-right"
+            toastOptions={{
+              style: {
+                background: "#141820",
+                border: "1px solid rgba(255,255,255,0.1)",
+                color: "#e8e4db",
+              },
+            }}
+          />
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>

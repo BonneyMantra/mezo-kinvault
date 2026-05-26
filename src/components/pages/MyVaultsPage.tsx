@@ -153,63 +153,144 @@ export function MyVaultsPage({
     ) &&
     Math.abs(totalPct - 100) < 0.01;
 
-  // Factory create tx
-  const { writeContract: writeFactory, data: factoryTxHash } =
-    useWriteContract();
-  const { isSuccess: factoryConfirmed, data: factoryReceipt } =
-    useWaitForTransactionReceipt({ hash: factoryTxHash });
+  // Factory + beneficiary write
+  const { writeContractAsync } = useWriteContract();
 
-  useEffect(() => {
-    if (factoryConfirmed && factoryReceipt) {
-      // Parse VaultCreated event to get the new vault address
-      const vaultCreatedLog = factoryReceipt.logs.find(
-        (log) =>
-          log.topics[0] ===
-          "0x0b045af6aff86dd2cda5342fd0329a354dc66759ff1eda00d7ecf13a76c7fb3b",
-      );
+  const doCreateVault = async () => {
+    const interval = parseInt(heartbeatInput);
+    if (!interval || interval <= 0) return;
+
+    setCreateStep("deploying");
+    setCreateStatus("Step 1: Deploying vault contract...");
+
+    try {
+      const { waitForTransactionReceipt } = await import("wagmi/actions");
+      const { getConfig } = await import("../../../src/lib/mezo");
+
+      const factoryHash = await writeContractAsync({
+        address: MEZO_ADDRESSES.factory,
+        abi: FACTORY_ABI,
+        functionName: "createVault",
+        args: [BigInt(interval)],
+        gas: 2_500_000n,
+      });
+
+      setCreateStatus("Waiting for vault deployment confirmation...");
+
+      const config = (await import("wagmi")).useConfig ? undefined : undefined;
+
+      // Poll for receipt via fetch since we can't use wagmi actions easily
       let createdAddr: string | null = null;
-      if (vaultCreatedLog && vaultCreatedLog.data) {
-        createdAddr = "0x" + vaultCreatedLog.data.slice(26, 66);
+      let attempts = 0;
+      while (!createdAddr && attempts < 30) {
+        attempts++;
+        await new Promise((r) => setTimeout(r, 2000));
+        try {
+          const res = await fetch("https://rpc.test.mezo.org", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              jsonrpc: "2.0",
+              id: 1,
+              method: "eth_getTransactionReceipt",
+              params: [factoryHash],
+            }),
+          });
+          const json = (await res.json()) as {
+            result?: {
+              status: string;
+              logs: { topics: string[]; data: string }[];
+            };
+          };
+          if (json.result && json.result.status === "0x1") {
+            const log = json.result.logs.find(
+              (l) =>
+                l.topics[0] ===
+                "0x0b045af6aff86dd2cda5342fd0329a354dc66759ff1eda00d7ecf13a76c7fb3b",
+            );
+            if (log) {
+              createdAddr = "0x" + log.data.slice(26, 66);
+            }
+          }
+        } catch {
+          // retry
+        }
       }
 
-      if (createdAddr) {
-        setNewVaultAddress(createdAddr);
-        saveVaultMeta(createdAddr, {
-          name: vaultName,
-          description: vaultDesc,
-          coverImage: coverImg,
-          owner: address!,
-          chainId: 31611,
+      if (!createdAddr) {
+        setCreateStatus("Error: could not find vault address in receipt");
+        return;
+      }
+
+      setNewVaultAddress(createdAddr);
+      const vaultAddr = createdAddr as `0x${string}`;
+
+      // Save metadata to Cloudflare
+      const benMeta = pendingBens
+        .filter((b) => !b.privacy && b.name)
+        .map((b) => ({ address: b.address, name: b.name, email: b.email }));
+
+      await saveVaultMeta(createdAddr, {
+        name: vaultName,
+        description: vaultDesc,
+        coverImage: coverImg,
+        owner: address!,
+        chainId: 31611,
+      });
+
+      // Add beneficiaries on-chain
+      const validBens = pendingBens.filter(
+        (b) =>
+          b.address.startsWith("0x") &&
+          b.address.length === 42 &&
+          parseFloat(b.pct) > 0,
+      );
+
+      for (let i = 0; i < validBens.length; i++) {
+        const b = validBens[i];
+        const bps = Math.round(parseFloat(b.pct) * 100);
+        setCreateStatus(
+          `Step 2: Adding beneficiary ${i + 1}/${validBens.length}...`,
+        );
+
+        const benHash = await writeContractAsync({
+          address: vaultAddr,
+          abi: KINVAULT_ABI,
+          functionName: "addBeneficiary",
+          args: [b.address as `0x${string}`, bps],
+          gas: 200_000n,
         });
+
+        // Wait for confirmation
+        let confirmed = false;
+        let benAttempts = 0;
+        while (!confirmed && benAttempts < 20) {
+          benAttempts++;
+          await new Promise((r) => setTimeout(r, 2000));
+          try {
+            const res = await fetch("https://rpc.test.mezo.org", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({
+                jsonrpc: "2.0",
+                id: 1,
+                method: "eth_getTransactionReceipt",
+                params: [benHash],
+              }),
+            });
+            const json = (await res.json()) as {
+              result?: { status: string };
+            };
+            if (json.result?.status === "0x1") confirmed = true;
+          } catch {
+            // retry
+          }
+        }
       }
 
       setCreateStep("done");
-      setCreateStatus("Vault deployed!");
+      setCreateStatus("Vault deployed with beneficiaries!");
       refetchMyVaults();
-    }
-  }, [factoryConfirmed, factoryReceipt]);
-
-  const doCreateVault = () => {
-    const interval = parseInt(heartbeatInput);
-    if (!interval || interval <= 0) return;
-    setCreateStep("deploying");
-    setCreateStatus("Deploying vault contract...");
-    try {
-      writeFactory(
-        {
-          address: MEZO_ADDRESSES.factory,
-          abi: FACTORY_ABI,
-          functionName: "createVault",
-          args: [BigInt(interval)],
-          gas: 2_500_000n,
-        },
-        {
-          onError: (err: Error) => {
-            setCreateStep("beneficiaries");
-            setCreateStatus(`Error: ${err.message.slice(0, 120)}`);
-          },
-        },
-      );
     } catch (err) {
       setCreateStep("beneficiaries");
       setCreateStatus(

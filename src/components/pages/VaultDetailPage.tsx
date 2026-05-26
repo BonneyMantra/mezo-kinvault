@@ -2,8 +2,6 @@ import { motion } from "motion/react";
 import {
   Activity,
   ArrowLeft,
-  CheckCircle2,
-  Coins,
   Droplet,
   ExternalLink,
   HeartPulse,
@@ -18,13 +16,13 @@ import { useEffect, useMemo, useState } from "react";
 import {
   useAccount,
   useBalance,
-  useReadContract,
   useReadContracts,
   useSimulateContract,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { parseEther, formatEther } from "viem";
+import { toast } from "sonner";
 import { shortAddress } from "../../lib/proof";
 import { KINVAULT_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
@@ -34,6 +32,8 @@ import { type VaultMetaWithAddress } from "../../lib/vaultMeta";
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 const GAS_FLOOR = parseEther("0.0001");
 const ease = [0.22, 1, 0.36, 1] as const;
+const explorerTx = (hash: string) =>
+  `https://explorer.test.mezo.org/tx/${hash}`;
 
 const fmtBtc = (wei: bigint | undefined) =>
   wei ? Number(formatEther(wei)).toFixed(6) : "0";
@@ -78,7 +78,6 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
   const balanceLoaded = nativeBalance !== undefined;
   const insufficientGas = balanceLoaded && nativeBalance.value < GAS_FLOOR;
 
-  // Read vault state
   const vaultReads = useReadContracts({
     contracts: [
       { address: vaultAddress, abi: KINVAULT_ABI, functionName: "owner" },
@@ -122,8 +121,8 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
 
   const isOwner =
     address && owner && address.toLowerCase() === owner.toLowerCase();
+  const hasDeposit = vaultBalance !== undefined && vaultBalance > 0n;
 
-  // Read beneficiaries
   const benContracts = Array.from({ length: beneficiaryCount }, (_, i) => ({
     address: vaultAddress,
     abi: KINVAULT_ABI,
@@ -143,7 +142,6 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     })
     .filter(Boolean) as { addr: `0x${string}`; bps: number }[];
 
-  // Timer
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000);
@@ -172,14 +170,12 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     return ((maxDebt - gasComp) * 10n ** 18n) / (10n ** 18n + rate);
   }, [vaultBalance, btcPrice]);
 
-  const hasDeposit = vaultBalance !== undefined && vaultBalance > 0n;
   const scenario: "active" | "ready" | "released" = released
     ? "released"
     : secondsRemaining === 0 && hasDeposit
       ? "ready"
       : "active";
 
-  // Simulate
   const heartbeatSim = useSimulateContract({
     address: vaultAddress,
     abi: KINVAULT_ABI,
@@ -190,14 +186,12 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     address: vaultAddress,
     abi: KINVAULT_ABI,
     functionName: "release",
-    query: { enabled: !insufficientGas && !!address },
+    query: { enabled: !insufficientGas && !!address && hasDeposit },
   });
 
-  // Write
   const [depositAmount, setDepositAmount] = useState("");
   const [newBenAddress, setNewBenAddress] = useState("");
   const [newBenPct, setNewBenPct] = useState("");
-  const [txStatus, setTxStatus] = useState("");
 
   const { writeContract, data: txHash } = useWriteContract();
   const { isSuccess: txConfirmed } = useWaitForTransactionReceipt({
@@ -205,19 +199,24 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
   });
 
   useEffect(() => {
-    if (txConfirmed) {
-      setTxStatus("Confirmed");
+    if (txConfirmed && txHash) {
+      toast.success("Transaction confirmed", {
+        action: {
+          label: "View tx",
+          onClick: () => window.open(explorerTx(txHash), "_blank"),
+        },
+      });
       vaultReads.refetch();
       benReads.refetch();
       heartbeatSim.refetch();
       releaseSim.refetch();
-      setTimeout(() => setTxStatus(""), 3000);
+      setDepositAmount("");
     }
   }, [txConfirmed]);
 
   const doDeposit = () => {
     if (!depositAmount) return;
-    setTxStatus("Depositing BTC...");
+    toast.loading("Depositing BTC...");
     writeContract({
       address: vaultAddress,
       abi: KINVAULT_ABI,
@@ -227,13 +226,13 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
   };
   const doHeartbeat = () => {
     if (!heartbeatSim.data?.request) return;
-    setTxStatus("Recording check-in...");
+    toast.loading("Recording check-in...");
     writeContract(heartbeatSim.data.request);
   };
   const doAddBeneficiary = () => {
     if (!newBenAddress || !newBenPct) return;
     const bps = Math.round(parseFloat(newBenPct) * 100);
-    setTxStatus("Adding beneficiary...");
+    toast.loading("Adding beneficiary...");
     writeContract({
       address: vaultAddress,
       abi: KINVAULT_ABI,
@@ -244,7 +243,7 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     setNewBenPct("");
   };
   const doRemoveBen = (index: number) => {
-    setTxStatus("Removing...");
+    toast.loading("Removing beneficiary...");
     writeContract({
       address: vaultAddress,
       abi: KINVAULT_ABI,
@@ -254,9 +253,20 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
   };
   const doRelease = () => {
     if (!releaseSim.data?.request) return;
-    setTxStatus("Releasing — opening MUSD trove...");
+    toast.loading("Releasing — opening MUSD trove...");
     writeContract(releaseSim.data.request);
   };
+
+  const releaseDisabled =
+    !hasDeposit ||
+    scenario !== "ready" ||
+    insufficientGas ||
+    !releaseSim.isSuccess;
+  const releaseLabel = !hasDeposit
+    ? "No BTC deposited"
+    : scenario !== "ready"
+      ? "Release MUSD"
+      : "Release MUSD";
 
   return (
     <div className="pageContainer">
@@ -297,7 +307,6 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
       )}
 
       <div className="vaultDetailGrid">
-        {/* Left: Vault stats + deposit */}
         <motion.div
           className="card"
           initial={{ opacity: 0, y: 16 }}
@@ -340,7 +349,6 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
             </div>
           </dl>
 
-          {/* Borrow preview */}
           <div className="riskPreview" style={{ marginTop: 16 }}>
             <div className="riskHeader">
               <ShieldCheck size={14} />
@@ -399,7 +407,6 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
           )}
         </motion.div>
 
-        {/* Center: Cockpit */}
         <motion.div
           className={`card cockpitCard ${scenario}`}
           initial={{ opacity: 0, y: 16 }}
@@ -464,19 +471,14 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
             <button
               className="actionBtn release"
               type="button"
-              disabled={
-                scenario !== "ready" || insufficientGas || !releaseSim.isSuccess
-              }
+              disabled={releaseDisabled}
               onClick={doRelease}
             >
-              <Activity size={15} /> Release MUSD
+              <Activity size={15} /> {releaseLabel}
             </button>
           </div>
-
-          {txStatus && <div className="txStatus">{txStatus}</div>}
         </motion.div>
 
-        {/* Right: Beneficiaries */}
         <motion.div
           className="card"
           initial={{ opacity: 0, y: 16 }}
@@ -522,19 +524,17 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
                 value={newBenAddress}
                 onChange={(e) => setNewBenAddress(e.target.value)}
               />
-              <div className="pctInputWrap" style={{ width: 72 }}>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="%"
-                  value={newBenPct}
-                  onChange={(e) =>
-                    setNewBenPct(e.target.value.replace(/[^0-9.]/g, ""))
-                  }
-                  className="benPctInput"
-                />
-                <span className="pctSuffix">%</span>
-              </div>
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="70"
+                value={newBenPct}
+                onChange={(e) =>
+                  setNewBenPct(e.target.value.replace(/[^0-9.]/g, ""))
+                }
+                className="benPctInput"
+                style={{ width: 56, textAlign: "center" }}
+              />
               <button
                 className="actionBtn"
                 type="button"
