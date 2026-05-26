@@ -27,7 +27,7 @@ import { shortAddress } from "../../lib/proof";
 import { KINVAULT_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
 import { useMezoRiskParams } from "../../hooks/useKinVault";
-import { type VaultMetaWithAddress } from "../../lib/vaultMeta";
+import { type VaultMetaWithAddress, relayRelease } from "../../lib/vaultMeta";
 import { CollateralHealth } from "../dashboard/CollateralHealth";
 import { BeneficiaryCards } from "../dashboard/BeneficiaryCards";
 
@@ -268,14 +268,33 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
       args: [BigInt(index)],
     });
   };
-  const doRelease = () => {
-    toast.loading("Releasing — opening MUSD trove...");
-    writeContract({
-      address: vaultAddress,
-      abi: KINVAULT_ABI,
-      functionName: "release",
-      gas: 10_000_000n,
+  const [releasing, setReleasing] = useState(false);
+  const doRelease = async () => {
+    setReleasing(true);
+    const toastId = toast.loading(
+      "Releasing — opening MUSD trove via relay...",
+    );
+    const result = await relayRelease(vaultAddress);
+    if (result.error) {
+      toast.error(`Release failed: ${result.error}`, { id: toastId });
+      setReleasing(false);
+      return;
+    }
+    toast.success("Release transaction sent!", {
+      id: toastId,
+      action: result.txHash
+        ? {
+            label: "View tx",
+            onClick: () => window.open(explorerTx(result.txHash!), "_blank"),
+          }
+        : undefined,
     });
+    // Wait for confirmation then refresh
+    setTimeout(() => {
+      vaultReads.refetch();
+      benReads.refetch();
+      setReleasing(false);
+    }, 6000);
   };
 
   const myBen = beneficiaries.find(
@@ -287,10 +306,7 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
       : 0n;
 
   const releaseDisabled =
-    !hasDeposit ||
-    scenario !== "ready" ||
-    insufficientGas ||
-    insufficientCollateral;
+    releasing || !hasDeposit || scenario !== "ready" || insufficientCollateral;
 
   const releaseLabel = !hasDeposit
     ? "No BTC deposited"

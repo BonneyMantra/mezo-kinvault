@@ -52,3 +52,27 @@ export async function getVaultsByOwnerMeta(
     return [];
   }
 }
+
+export async function relayRelease(
+  vaultAddress: string,
+): Promise<{ txHash?: string; error?: string }> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/release/${vaultAddress.toLowerCase()}`,
+      { method: "POST" },
+    );
+    const data = (await res.json()) as {
+      ok?: boolean;
+      txHash?: string;
+      error?: string;
+    };
+    if (!res.ok || data.error) {
+      return { error: data.error ?? "Release failed" };
+    }
+    return { txHash: data.txHash };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Network error",
+    };
+  }
+}
