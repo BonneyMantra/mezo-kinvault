@@ -1322,6 +1322,47 @@ button {
   opacity: 0.7;
 }
 
+/* --- Vault detail page --- */
+.vaultDetailCover {
+  height: 160px;
+  border-radius: 16px;
+  background-size: cover;
+  background-position: center;
+  margin-bottom: 20px;
+  background-color: var(--graphite);
+}
+
+.vaultDetailGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.riskPreview {
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+.riskHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--copper);
+  margin-bottom: 10px;
+}
+
+@media (max-width: 900px) {
+  .vaultDetailGrid {
+    grid-template-columns: 1fr;
+  }
+  .vaultDetailCover {
+    height: 120px;
+  }
+}
+
 /* --- Onboarding modal --- */
 .onboardingOverlay {
   position: fixed;

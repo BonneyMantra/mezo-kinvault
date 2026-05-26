@@ -34,6 +34,7 @@ import {
   getVaultsByOwnerMeta,
   type VaultMetaWithAddress,
 } from "../../lib/vaultMeta";
+import { VaultDetailPage } from "./VaultDetailPage";
 
 const FAUCET_URL = "https://faucet.test.mezo.org/";
 const GAS_FLOOR = parseEther("0.0001");
@@ -235,6 +236,20 @@ export function MyVaultsPage({
     setCreateStatus("");
     setNewVaultAddress(null);
   };
+
+  // ─── Render: Vault Detail ───
+  if (selectedVault) {
+    const selectedMeta = vaultMetas.find(
+      (m) => m.address.toLowerCase() === selectedVault.toLowerCase(),
+    );
+    return (
+      <VaultDetailPage
+        vaultAddress={selectedVault}
+        meta={selectedMeta}
+        onBack={() => setSelectedVault(null)}
+      />
+    );
+  }
 
   // ─── Render: Create Flow ───
   if (creating) {
@@ -594,6 +609,7 @@ export function MyVaultsPage({
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: i * 0.08, ease }}
+                onClick={() => setSelectedVault(vaultAddr)}
               >
                 <div
                   className="vaultCardCover"
