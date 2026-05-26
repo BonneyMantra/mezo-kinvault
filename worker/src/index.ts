@@ -129,20 +129,23 @@ export default {
       });
 
       try {
-        // Step 1: Create vault via factory
-        const FACTORY = "0x92F84329447e08bc02470A583f4c558E5f6BF05c";
+        // Step 1: Create vault via factory with user as owner
+        const FACTORY = "0x0a47D82B02400088b9920707E60195e2A3E7f7bc";
         const createData = encodeFunctionData({
           abi: [
             {
               type: "function",
-              name: "createVault",
-              inputs: [{ type: "uint256", name: "heartbeatInterval" }],
+              name: "createVaultFor",
+              inputs: [
+                { type: "address", name: "owner_" },
+                { type: "uint256", name: "heartbeatInterval" },
+              ],
               outputs: [{ type: "address" }],
               stateMutability: "nonpayable",
             },
           ],
-          functionName: "createVault",
-          args: [BigInt(body.heartbeatInterval)],
+          functionName: "createVaultFor",
+          args: [body.owner as `0x${string}`, BigInt(body.heartbeatInterval)],
         });
 
         const createHash = await client.sendTransaction({

@@ -30,8 +30,12 @@ contract KinVaultFactory {
     }
 
     function createVault(uint256 heartbeatInterval) external returns (address) {
+        return createVaultFor(msg.sender, heartbeatInterval);
+    }
+
+    function createVaultFor(address owner_, uint256 heartbeatInterval) public returns (address) {
         KinVault vault = new KinVault(
-            msg.sender,
+            owner_,
             borrowerOps,
             priceFeed,
             musd,
@@ -41,8 +45,8 @@ contract KinVaultFactory {
         );
         address v = address(vault);
         allVaults.push(v);
-        vaultsByOwner[msg.sender].push(v);
-        emit VaultCreated(msg.sender, v, heartbeatInterval);
+        vaultsByOwner[owner_].push(v);
+        emit VaultCreated(owner_, v, heartbeatInterval);
         return v;
     }
 
