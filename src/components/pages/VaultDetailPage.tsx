@@ -282,13 +282,16 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     insufficientGas ||
     insufficientCollateral ||
     !releaseSim.isSuccess;
+
   const releaseLabel = !hasDeposit
     ? "No BTC deposited"
-    : insufficientCollateral
-      ? "Insufficient BTC"
+    : insufficientCollateral && minBtcNeeded
+      ? `Need ${fmtBtc(minBtcNeeded)} BTC min`
       : scenario !== "ready"
-        ? "Release MUSD"
-        : "Release MUSD";
+        ? "Check-in still active"
+        : estimatedMusd > 0n
+          ? `Release ~${fmtMusd(estimatedMusd)} MUSD`
+          : "Release MUSD";
 
   return (
     <div className="pageContainer">
