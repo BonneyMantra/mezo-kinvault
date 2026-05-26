@@ -997,18 +997,120 @@ button {
 .benFormList {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
   margin-bottom: 14px;
 }
 
-.benFormRow {
+.benFormCard {
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.benFormCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.benFormNum {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--copper);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.benPrivacyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.privacyToggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.privacyToggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+.toggleTrack {
+  position: absolute;
+  inset: 0;
+  background: var(--line);
+  border-radius: 20px;
+  transition: background 0.2s;
+}
+
+.toggleTrack::after {
+  content: "";
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--text);
+  top: 2px;
+  left: 2px;
+  transition: transform 0.2s;
+}
+
+.privacyToggle input:checked + .toggleTrack {
+  background: var(--copper);
+}
+
+.privacyToggle input:checked + .toggleTrack::after {
+  transform: translateX(16px);
+}
+
+.privacyLabel {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.benNameRow {
+  display: flex;
+  gap: 8px;
+}
+
+.benNameInput,
+.benEmailInput {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-family: inherit;
+}
+
+.benNameInput:focus,
+.benEmailInput:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+
+.benAddrPctRow {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
 .benAddrInput {
-  flex: 2.5;
+  flex: 1;
   min-width: 0;
   padding: 9px 12px;
   background: rgba(255, 255, 255, 0.04);
@@ -1019,29 +1121,42 @@ button {
   font-family: "IBM Plex Mono", monospace;
 }
 
-.benBpsInput {
-  width: 72px;
-  text-align: center;
-  padding: 9px 8px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: 0.82rem;
-  font-family: "IBM Plex Mono", monospace;
-}
-
-.benAddrInput:focus,
-.benBpsInput:focus {
+.benAddrInput:focus {
   outline: none;
   border-color: var(--copper);
 }
 
-.benPctLabel {
+.pctInputWrap {
+  position: relative;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.benPctInput {
+  width: 100%;
+  padding: 9px 24px 9px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-family: "IBM Plex Mono", monospace;
+  text-align: right;
+}
+
+.benPctInput:focus {
+  outline: none;
+  border-color: var(--copper);
+}
+
+.pctSuffix {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   font-size: 0.78rem;
   color: var(--muted);
-  min-width: 40px;
-  text-align: right;
+  pointer-events: none;
 }
 
 .benRemoveBtn {

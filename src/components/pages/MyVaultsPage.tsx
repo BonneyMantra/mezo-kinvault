@@ -65,7 +65,13 @@ const COVER_IMAGES = [
   "https://images.unsplash.com/photo-1642104704074-907c0698cbd9?w=600&h=200&fit=crop",
 ];
 
-type BenEntry = { address: string; bps: string };
+type BenEntry = {
+  address: string;
+  pct: string;
+  name: string;
+  email: string;
+  privacy: boolean;
+};
 type CreateStep = "details" | "beneficiaries" | "deploying" | "done";
 
 export function MyVaultsPage({
@@ -113,33 +119,38 @@ export function MyVaultsPage({
   const [coverImg, setCoverImg] = useState(COVER_IMAGES[0]);
   const [heartbeatInput, setHeartbeatInput] = useState("60");
   const [pendingBens, setPendingBens] = useState<BenEntry[]>([
-    { address: "", bps: "" },
+    { address: "", pct: "", name: "", email: "", privacy: false },
   ]);
   const [createStatus, setCreateStatus] = useState("");
   const [newVaultAddress, setNewVaultAddress] = useState<string | null>(null);
 
   const addBenRow = () =>
-    setPendingBens((b) => [...b, { address: "", bps: "" }]);
+    setPendingBens((b) => [
+      ...b,
+      { address: "", pct: "", name: "", email: "", privacy: false },
+    ]);
   const removeBenRow = (i: number) =>
     setPendingBens((b) => b.filter((_, idx) => idx !== i));
-  const updateBen = (i: number, field: "address" | "bps", val: string) =>
+  const updateBen = (i: number, field: keyof BenEntry, val: string | boolean) =>
     setPendingBens((b) =>
       b.map((entry, idx) => (idx === i ? { ...entry, [field]: val } : entry)),
     );
 
-  const totalBps = pendingBens.reduce(
-    (sum, b) => sum + (parseInt(b.bps) || 0),
+  const totalPct = pendingBens.reduce(
+    (sum, b) => sum + (parseFloat(b.pct) || 0),
     0,
   );
+  const pctToBps = (pct: string) => Math.round((parseFloat(pct) || 0) * 100);
   const bensValid =
     pendingBens.length > 0 &&
     pendingBens.every(
       (b) =>
         b.address.startsWith("0x") &&
         b.address.length === 42 &&
-        parseInt(b.bps) > 0,
+        parseFloat(b.pct) > 0 &&
+        (b.privacy || b.name.trim().length > 0),
     ) &&
-    totalBps === 10000;
+    Math.abs(totalPct - 100) < 0.01;
 
   // Factory create tx
   const { writeContract: writeFactory, data: factoryTxHash } =
@@ -202,7 +213,9 @@ export function MyVaultsPage({
     setVaultDesc("");
     setCoverImg(COVER_IMAGES[0]);
     setHeartbeatInput("60");
-    setPendingBens([{ address: "", bps: "" }]);
+    setPendingBens([
+      { address: "", pct: "", name: "", email: "", privacy: false },
+    ]);
     setCreateStatus("");
     setNewVaultAddress(null);
   };
@@ -309,42 +322,89 @@ export function MyVaultsPage({
               <Users size={16} /> Beneficiaries
             </h3>
             <p className="formDesc">
-              Add wallet addresses and percentage splits. Splits must total
-              exactly 100% (10000 BPS).
+              Add beneficiaries with their wallet address and share percentage.
+              Total must equal exactly 100%.
             </p>
 
             <div className="benFormList">
               {pendingBens.map((b, i) => (
-                <div key={i} className="benFormRow">
-                  <input
-                    type="text"
-                    placeholder="0x address"
-                    value={b.address}
-                    onChange={(e) => updateBen(i, "address", e.target.value)}
-                    className="benAddrInput"
-                  />
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="BPS"
-                    value={b.bps}
-                    onChange={(e) =>
-                      updateBen(i, "bps", e.target.value.replace(/[^0-9]/g, ""))
-                    }
-                    className="benBpsInput"
-                  />
-                  <span className="benPctLabel">
-                    {b.bps ? `${(parseInt(b.bps) / 100).toFixed(1)}%` : "—"}
-                  </span>
-                  {pendingBens.length > 1 && (
-                    <button
-                      className="benRemoveBtn"
-                      type="button"
-                      onClick={() => removeBenRow(i)}
-                    >
-                      <Trash2 size={14} />
-                    </button>
+                <div key={i} className="benFormCard">
+                  <div className="benFormCardHeader">
+                    <span className="benFormNum">#{i + 1}</span>
+                    {pendingBens.length > 1 && (
+                      <button
+                        className="benRemoveBtn"
+                        type="button"
+                        onClick={() => removeBenRow(i)}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="benPrivacyRow">
+                    <label className="privacyToggle">
+                      <input
+                        type="checkbox"
+                        checked={b.privacy}
+                        onChange={(e) =>
+                          updateBen(i, "privacy", e.target.checked)
+                        }
+                      />
+                      <span className="toggleTrack" />
+                    </label>
+                    <span className="privacyLabel">
+                      {b.privacy
+                        ? "Address only (private)"
+                        : "Include name & email"}
+                    </span>
+                  </div>
+
+                  {!b.privacy && (
+                    <div className="benNameRow">
+                      <input
+                        type="text"
+                        placeholder="Name"
+                        value={b.name}
+                        onChange={(e) => updateBen(i, "name", e.target.value)}
+                        className="benNameInput"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Email (optional)"
+                        value={b.email}
+                        onChange={(e) => updateBen(i, "email", e.target.value)}
+                        className="benEmailInput"
+                      />
+                    </div>
                   )}
+
+                  <div className="benAddrPctRow">
+                    <input
+                      type="text"
+                      placeholder="0x wallet address"
+                      value={b.address}
+                      onChange={(e) => updateBen(i, "address", e.target.value)}
+                      className="benAddrInput"
+                    />
+                    <div className="pctInputWrap">
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        placeholder="0"
+                        value={b.pct}
+                        onChange={(e) =>
+                          updateBen(
+                            i,
+                            "pct",
+                            e.target.value.replace(/[^0-9.]/g, ""),
+                          )
+                        }
+                        className="benPctInput"
+                      />
+                      <span className="pctSuffix">%</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -354,9 +414,9 @@ export function MyVaultsPage({
                 <Plus size={14} /> Add beneficiary
               </button>
               <span
-                className={`bpsTotalBadge ${totalBps === 10000 ? "valid" : totalBps > 10000 ? "over" : ""}`}
+                className={`bpsTotalBadge ${Math.abs(totalPct - 100) < 0.01 ? "valid" : totalPct > 100 ? "over" : ""}`}
               >
-                {totalBps} / 10000 BPS
+                {totalPct.toFixed(1)}% / 100%
               </span>
             </div>
 
