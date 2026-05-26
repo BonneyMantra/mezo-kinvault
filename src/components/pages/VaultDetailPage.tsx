@@ -276,6 +276,14 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     writeContract(releaseSim.data.request);
   };
 
+  const myBen = beneficiaries.find(
+    (b) => address && b.addr.toLowerCase() === address.toLowerCase(),
+  );
+  const myShare =
+    myBen && estimatedMusd > 0n
+      ? (estimatedMusd * BigInt(myBen.bps)) / 10000n
+      : 0n;
+
   const releaseDisabled =
     !hasDeposit ||
     scenario !== "ready" ||
@@ -289,9 +297,11 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
       ? `Need ${fmtBtc(minBtcNeeded)} BTC min`
       : scenario !== "ready"
         ? "Check-in still active"
-        : estimatedMusd > 0n
-          ? `Release ~${fmtMusd(estimatedMusd)} MUSD`
-          : "Release MUSD";
+        : myShare > 0n
+          ? `Claim ~${fmtMusd(myShare)} MUSD`
+          : estimatedMusd > 0n
+            ? `Release ~${fmtMusd(estimatedMusd)} MUSD`
+            : "Release MUSD";
 
   return (
     <div className="pageContainer">
