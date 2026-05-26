@@ -193,12 +193,28 @@ export function MyVaultsPage({
     if (!interval || interval <= 0) return;
     setCreateStep("deploying");
     setCreateStatus("Deploying vault contract...");
-    writeFactory({
-      address: MEZO_ADDRESSES.factory,
-      abi: FACTORY_ABI,
-      functionName: "createVault",
-      args: [BigInt(interval)],
-    });
+    try {
+      writeFactory(
+        {
+          address: MEZO_ADDRESSES.factory,
+          abi: FACTORY_ABI,
+          functionName: "createVault",
+          args: [BigInt(interval)],
+          gas: 2_500_000n,
+        },
+        {
+          onError: (err: Error) => {
+            setCreateStep("beneficiaries");
+            setCreateStatus(`Error: ${err.message.slice(0, 120)}`);
+          },
+        },
+      );
+    } catch (err) {
+      setCreateStep("beneficiaries");
+      setCreateStatus(
+        `Error: ${err instanceof Error ? err.message.slice(0, 120) : "Unknown error"}`,
+      );
+    }
   };
 
   // For managing a selected vault — read its state
@@ -420,6 +436,11 @@ export function MyVaultsPage({
               </span>
             </div>
 
+            <p className="formHint" style={{ textAlign: "center" }}>
+              Deploying costs only gas (negligible). BTC deposit happens after
+              creation.
+            </p>
+
             <div className="createNavRow">
               <button
                 className="actionBtn"
@@ -471,8 +492,9 @@ export function MyVaultsPage({
             <HeartPulse size={32} className="spinPulse" />
             <h3>{createStatus}</h3>
             <p style={{ color: "var(--muted)", fontSize: "0.85rem" }}>
-              Confirm the transaction in your wallet. The factory will deploy
-              your vault contract on Mezo Testnet.
+              Confirm the transaction in your wallet. This only costs gas
+              (negligible on Mezo Testnet). No BTC deposit is needed now — you
+              can deposit BTC after your vault is created.
             </p>
           </motion.div>
         )}
