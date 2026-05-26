@@ -52,7 +52,7 @@ export function useBeneficiaryVaults() {
     (async () => {
       setIsLoading(true);
       const found: BenVault[] = [];
-      const addrLower = address.toLowerCase().slice(2).padStart(64, "0");
+      const addrLower = address.toLowerCase().slice(2);
 
       for (let i = 0; i < count; i++) {
         const idxHex = i.toString(16).padStart(64, "0");
