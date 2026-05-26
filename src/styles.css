@@ -1478,7 +1478,64 @@ button {
   line-height: 1.5;
 }
 
-/* --- Beneficiary page --- */
+/* --- Beneficiary vault cards --- */
+.benVaultCard {
+  cursor: pointer;
+}
+
+.benVaultHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px 0;
+}
+
+.benVaultStatus {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 3px 10px;
+  border-radius: 50px;
+}
+
+.benVaultStatus.active {
+  background: rgba(196, 127, 69, 0.12);
+  color: var(--copper);
+}
+
+.benVaultStatus.claimable {
+  background: rgba(104, 201, 146, 0.15);
+  color: var(--moss);
+}
+
+.benVaultStatus.released {
+  background: rgba(138, 133, 124, 0.15);
+  color: var(--muted);
+}
+
+.benVaultPct {
+  font-family: "Sora", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--copper);
+}
+
+.benVaultStats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 6px;
+}
+
+.benVaultStats a {
+  color: var(--copper);
+}
+
+/* --- Beneficiary page (legacy) --- */
 .allocBig {
   display: flex;
   flex-direction: column;
