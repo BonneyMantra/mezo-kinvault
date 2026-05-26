@@ -595,6 +595,13 @@ button {
   background: rgba(255, 255, 255, 0.1);
 }
 
+.sidebarMusd {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--moss);
+}
+
 .sidebarBal {
   font-family: "IBM Plex Mono", monospace;
   font-size: 0.82rem;

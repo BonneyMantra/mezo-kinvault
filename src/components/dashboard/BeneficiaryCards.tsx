@@ -79,14 +79,16 @@ export function BeneficiaryCards({
             </div>
 
             <div className="benCardMeta">
-              <span className={`benRehearse ${b.hasRehearsed ? "done" : ""}`}>
-                {b.hasRehearsed ? (
-                  <CheckCircle2 size={12} />
-                ) : (
-                  <Circle size={12} />
-                )}
-                {b.hasRehearsed ? "Rehearsed" : "Not rehearsed"}
-              </span>
+              {!released && (
+                <span className={`benRehearse ${b.hasRehearsed ? "done" : ""}`}>
+                  {b.hasRehearsed ? (
+                    <CheckCircle2 size={12} />
+                  ) : (
+                    <Circle size={12} />
+                  )}
+                  {b.hasRehearsed ? "Rehearsed" : "Not rehearsed"}
+                </span>
+              )}
               <span className="benAmount">
                 {received ? (
                   <>

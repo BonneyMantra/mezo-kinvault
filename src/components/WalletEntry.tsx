@@ -1,7 +1,8 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Wallet } from "lucide-react";
-import { useAccount, useBalance } from "wagmi";
+import { useAccount, useBalance, useReadContract } from "wagmi";
 import { formatEther } from "viem";
+import { ERC20_ABI, MEZO_ADDRESSES } from "../lib/contracts";
 
 const shortAddr = (a: string) => `${a.slice(0, 6)}…${a.slice(-4)}`;
 const dicebear = (addr: string) =>
@@ -13,6 +14,13 @@ export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
     address,
     query: { refetchInterval: 15000 },
   });
+  const { data: musdRaw } = useReadContract({
+    address: MEZO_ADDRESSES.musd as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "balanceOf",
+    args: address ? [address] : undefined,
+    query: { enabled: !!address, refetchInterval: 15000 },
+  });
 
   const btcNum = bal ? Number(formatEther(bal.value)) : null;
   const btc =
@@ -21,6 +29,14 @@ export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
       : btcNum < 0.0001 && btcNum > 0
         ? btcNum.toFixed(6)
         : btcNum.toFixed(4);
+
+  const musdVal = musdRaw as bigint | undefined;
+  const musd =
+    musdVal !== undefined
+      ? Number(formatEther(musdVal)).toLocaleString(undefined, {
+          maximumFractionDigits: 2,
+        })
+      : null;
 
   if (!passportEnabled) {
     return (
@@ -55,6 +71,9 @@ export function WalletEntry({ passportEnabled }: { passportEnabled: boolean }) {
             type="button"
             onClick={openAccountModal}
           >
+            {musd !== null && Number(musd) > 0 && (
+              <span className="sidebarMusd">{musd} MUSD</span>
+            )}
             <span className="sidebarBal">{btc} BTC</span>
             <span className="sidebarAddr">
               <img
