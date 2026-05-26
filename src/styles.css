@@ -775,8 +775,42 @@ button {
   background: var(--moss);
 }
 
+/* --- Explorer stats --- */
+.explorerStatsRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.explorerStat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 14px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  text-align: center;
+  color: var(--copper);
+}
+
+.explorerStatValue {
+  font-family: "Sora", sans-serif;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.explorerStatLabel {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
 /* --- Grids per page --- */
-.explorerGrid,
 .vaultManageGrid,
 .beneficiaryGrid {
   display: grid;
@@ -2132,7 +2166,12 @@ button {
   .mainContent {
     padding: 16px;
   }
-  .explorerGrid,
+  .explorerStatsRow {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .proofGrid {
+    grid-template-columns: 1fr 1fr;
+  }
   .vaultManageGrid,
   .beneficiaryGrid {
     grid-template-columns: 1fr;

@@ -1,29 +1,16 @@
 import { motion } from "motion/react";
-import {
-  Compass,
-  ExternalLink,
-  HeartPulse,
-  ShieldCheck,
-  Users,
-} from "lucide-react";
+import { Compass, ExternalLink, LockKeyhole, TrendingUp } from "lucide-react";
 import { formatEther } from "viem";
+import { useReadContract } from "wagmi";
 import {
   shortAddress,
   PROOF,
   explorerAddress,
   explorerTx,
 } from "../../lib/proof";
-import {
-  useKinVaultState,
-  useBeneficiaries,
-  useMezoRiskParams,
-} from "../../hooks/useKinVault";
 import { useBtcPrice } from "../../hooks/useBtcPrice";
-import { useActivityFeed } from "../../hooks/useVaultData";
-import { ActivityFeed } from "../dashboard/ActivityFeed";
-import { CollateralHealth } from "../dashboard/CollateralHealth";
-import { LifecycleTimeline } from "../dashboard/LifecycleTimeline";
-import { MEZO_ADDRESSES } from "../../lib/contracts";
+import { useMezoRiskParams } from "../../hooks/useKinVault";
+import { FACTORY_ABI, MEZO_ADDRESSES } from "../../lib/contracts";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -33,204 +20,181 @@ const fmt = (wei: bigint | undefined, digits = 2) => {
     maximumFractionDigits: digits,
   });
 };
-const fmtBtc = (wei: bigint | undefined) =>
-  wei ? Number(formatEther(wei)).toFixed(6) : "0";
 const fmtUsd = (p: bigint | undefined) =>
   p
     ? `$${Number(formatEther(p)).toLocaleString(undefined, { maximumFractionDigits: 0 })}`
-    : "$0";
+    : "—";
 
 export function ExplorerPage() {
-  const vault = useKinVaultState();
   const { price: btcPrice } = useBtcPrice();
   const risk = useMezoRiskParams();
-  const feed = useActivityFeed();
-  const benCount = vault.beneficiaryCount ? Number(vault.beneficiaryCount) : 0;
-  const { beneficiaries } = useBeneficiaries(benCount);
+
+  const { data: vaultCount } = useReadContract({
+    address: MEZO_ADDRESSES.factory,
+    abi: FACTORY_ABI,
+    functionName: "vaultCount",
+    query: { refetchInterval: 15000 },
+  });
+
+  const totalVaults = vaultCount ? Number(vaultCount) : 0;
 
   return (
     <div className="pageContainer">
       <div className="pageHeader">
         <Compass size={20} />
-        <h1>Vault Explorer</h1>
-        <span className="pageSubtitle">
-          Live on-chain data from Mezo Testnet
-        </span>
+        <h1>Protocol Explorer</h1>
+        <span className="pageSubtitle">KinVault on Mezo Testnet (31611)</span>
       </div>
 
-      <div className="explorerGrid">
+      <div className="explorerStatsRow">
         <motion.div
-          className="card"
+          className="explorerStat"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, ease }}
+          transition={{ duration: 0.4, ease }}
         >
-          <h3 className="cardTitle">Vault Overview</h3>
-          <dl className="statGrid">
-            <div>
-              <dt>BTC Locked</dt>
-              <dd className="statHighlight">
-                {fmtBtc(vault.vaultBalance)} BTC
-              </dd>
-            </div>
-            <div>
-              <dt>BTC Price</dt>
-              <dd>{fmtUsd(btcPrice)}</dd>
-            </div>
-            <div>
-              <dt>Beneficiaries</dt>
-              <dd>{benCount}</dd>
-            </div>
-            <div>
-              <dt>Splits</dt>
-              <dd>{vault.totalBps?.toString() ?? "0"} / 10000</dd>
-            </div>
-            <div>
-              <dt>Status</dt>
-              <dd>
-                <span
-                  className={`statusDot ${vault.released ? "released" : vault.canRelease ? "ready" : "active"}`}
-                />
-                {vault.released
-                  ? "Released"
-                  : vault.canRelease
-                    ? "Release available"
-                    : "Active"}
-              </dd>
-            </div>
-            <div>
-              <dt>Owner</dt>
-              <dd>{vault.owner ? shortAddress(vault.owner) : "—"}</dd>
-            </div>
-          </dl>
+          <LockKeyhole size={20} />
+          <span className="explorerStatValue">{totalVaults}</span>
+          <span className="explorerStatLabel">Vaults created</span>
         </motion.div>
 
         <motion.div
-          className="card"
+          className="explorerStat"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.08, ease }}
+          transition={{ duration: 0.4, delay: 0.06, ease }}
         >
-          <h3 className="cardTitle">Mezo Borrow Parameters</h3>
-          <dl className="statGrid">
-            <div>
-              <dt>Min net debt</dt>
-              <dd>{fmt(risk.minNetDebt)} MUSD</dd>
-            </div>
-            <div>
-              <dt>Gas compensation</dt>
-              <dd>{fmt(risk.gasCompensation)} MUSD</dd>
-            </div>
-            <div>
-              <dt>Borrow rate</dt>
-              <dd>
-                {risk.borrowingRate !== undefined
-                  ? `${(Number(risk.borrowingRate) / 1e16).toFixed(2)}%`
-                  : "—"}
-              </dd>
-            </div>
-            <div>
-              <dt>Min collateral (MCR)</dt>
-              <dd>
-                {risk.mcr !== undefined
-                  ? `${(Number(risk.mcr) / 1e16).toFixed(0)}%`
-                  : "—"}
-              </dd>
-            </div>
-          </dl>
-
-          <CollateralHealth price={btcPrice} />
+          <TrendingUp size={20} />
+          <span className="explorerStatValue">{fmtUsd(btcPrice)}</span>
+          <span className="explorerStatLabel">BTC price (oracle)</span>
         </motion.div>
 
         <motion.div
-          className="card"
+          className="explorerStat"
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.16, ease }}
+          transition={{ duration: 0.4, delay: 0.12, ease }}
         >
-          <h3 className="cardTitle">
-            <Users size={15} /> Beneficiaries
-          </h3>
-          {beneficiaries.length > 0 ? (
-            <ol className="explorerBenList">
-              {beneficiaries.map((b) => (
-                <li key={b.addr}>
-                  <span className="benAddr">{shortAddress(b.addr)}</span>
-                  <span className="benPct">{(b.bps / 100).toFixed(1)}%</span>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <p className="emptyNote">No beneficiaries configured.</p>
-          )}
+          <span className="explorerStatValue">
+            {risk.borrowingRate !== undefined
+              ? `${(Number(risk.borrowingRate) / 1e16).toFixed(2)}%`
+              : "—"}
+          </span>
+          <span className="explorerStatLabel">Borrow rate</span>
+        </motion.div>
 
-          <LifecycleTimeline
-            events={feed.events}
-            released={vault.released}
-            totalBps={vault.totalBps}
-            vaultBalance={vault.vaultBalance}
-          />
+        <motion.div
+          className="explorerStat"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.18, ease }}
+        >
+          <span className="explorerStatValue">
+            {risk.mcr !== undefined
+              ? `${(Number(risk.mcr) / 1e16).toFixed(0)}%`
+              : "—"}
+          </span>
+          <span className="explorerStatLabel">Min collateral</span>
         </motion.div>
       </div>
 
-      <ActivityFeed events={feed.events} isLoading={feed.isLoading} />
-
-      <motion.section
-        className="proofSection"
+      <motion.div
+        className="card"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.24, ease }}
+        transition={{ duration: 0.5, delay: 0.2, ease }}
       >
-        <div className="proofHead">
-          <ShieldCheck size={15} />
-          <span>Proof — live on Mezo Testnet</span>
-        </div>
-        <div className="proofGrid">
+        <h3 className="cardTitle">Mezo MUSD Parameters</h3>
+        <dl className="statGrid">
           <div>
-            <dt>Network</dt>
+            <dt>Min net debt</dt>
+            <dd>{fmt(risk.minNetDebt)} MUSD</dd>
+          </div>
+          <div>
+            <dt>Gas compensation</dt>
+            <dd>{fmt(risk.gasCompensation)} MUSD</dd>
+          </div>
+          <div>
+            <dt>Borrow rate</dt>
             <dd>
-              {PROOF.network} ({PROOF.chainId})
+              {risk.borrowingRate !== undefined
+                ? `${(Number(risk.borrowingRate) / 1e16).toFixed(2)}%`
+                : "—"}
             </dd>
           </div>
           <div>
-            <dt>Contract</dt>
+            <dt>Min collateral ratio</dt>
             <dd>
-              <a
-                href={explorerAddress(PROOF.contract)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {shortAddress(PROOF.contract)} <ExternalLink size={11} />
-              </a>
+              {risk.mcr !== undefined
+                ? `${(Number(risk.mcr) / 1e16).toFixed(0)}%`
+                : "—"}
             </dd>
           </div>
+        </dl>
+      </motion.div>
+
+      <motion.div
+        className="card"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.28, ease }}
+        style={{ marginTop: 16 }}
+      >
+        <h3 className="cardTitle">Contracts</h3>
+        <dl className="statGrid">
           <div>
-            <dt>Deploy tx</dt>
+            <dt>Factory</dt>
             <dd>
               <a
-                href={explorerTx(PROOF.deployTx)}
+                href={explorerAddress(MEZO_ADDRESSES.factory)}
                 target="_blank"
                 rel="noreferrer"
               >
-                {shortAddress(PROOF.deployTx)} <ExternalLink size={11} />
-              </a>
-            </dd>
-          </div>
-          <div>
-            <dt>Vault address</dt>
-            <dd>
-              <a
-                href={explorerAddress(MEZO_ADDRESSES.kinVault)}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {shortAddress(MEZO_ADDRESSES.kinVault)}{" "}
+                {shortAddress(MEZO_ADDRESSES.factory)}{" "}
                 <ExternalLink size={11} />
               </a>
             </dd>
           </div>
-        </div>
-      </motion.section>
+          <div>
+            <dt>BorrowerOperations</dt>
+            <dd>
+              <a
+                href={explorerAddress(MEZO_ADDRESSES.borrowerOperations)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddress(MEZO_ADDRESSES.borrowerOperations)}{" "}
+                <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>PriceFeed</dt>
+            <dd>
+              <a
+                href={explorerAddress(MEZO_ADDRESSES.priceFeed)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddress(MEZO_ADDRESSES.priceFeed)}{" "}
+                <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>MUSD Token</dt>
+            <dd>
+              <a
+                href={explorerAddress(MEZO_ADDRESSES.musd)}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {shortAddress(MEZO_ADDRESSES.musd)} <ExternalLink size={11} />
+              </a>
+            </dd>
+          </div>
+        </dl>
+      </motion.div>
     </div>
   );
 }
