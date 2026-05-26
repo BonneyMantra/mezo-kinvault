@@ -130,7 +130,7 @@ export default {
 
       try {
         // Step 1: Create vault via factory with user as owner
-        const FACTORY = "0x35b82e56a3753037c9B0a64b56acB00A5685CE21";
+        const FACTORY = "0xE88f71A54819cc89a3aC535EF2925caB5b9B19bE";
         const createData = encodeFunctionData({
           abi: [
             {
@@ -186,12 +186,13 @@ export default {
           );
         }
 
-        // Step 2: Add beneficiaries
-        const addBenAbi = [
+        // Step 2: Add beneficiaries via factory (factory is the creator)
+        const addBenViaFactoryAbi = [
           {
             type: "function" as const,
-            name: "addBeneficiary" as const,
+            name: "addBeneficiaryTo" as const,
             inputs: [
+              { type: "address" as const, name: "vault_" },
               { type: "address" as const, name: "addr_" },
               { type: "uint16" as const, name: "bps_" },
             ],
@@ -203,17 +204,20 @@ export default {
         const benHashes: string[] = [];
         for (const ben of body.beneficiaries) {
           const benData = encodeFunctionData({
-            abi: addBenAbi,
-            functionName: "addBeneficiary",
-            args: [ben.address as `0x${string}`, ben.bps],
+            abi: addBenViaFactoryAbi,
+            functionName: "addBeneficiaryTo",
+            args: [
+              vaultAddr as `0x${string}`,
+              ben.address as `0x${string}`,
+              ben.bps,
+            ],
           });
           const benHash = await client.sendTransaction({
-            to: vaultAddr as `0x${string}`,
+            to: FACTORY as `0x${string}`,
             data: benData,
             gas: 200_000n,
           });
           benHashes.push(benHash);
-          // Wait briefly for each
           await new Promise((r) => setTimeout(r, 3000));
         }
 

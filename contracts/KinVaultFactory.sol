@@ -50,6 +50,10 @@ contract KinVaultFactory {
         return v;
     }
 
+    function addBeneficiaryTo(address vault_, address addr_, uint16 bps_) external {
+        KinVault(payable(vault_)).addBeneficiary(addr_, bps_);
+    }
+
     function getVaultsByOwner(address owner) external view returns (address[] memory) {
         return vaultsByOwner[owner];
     }
