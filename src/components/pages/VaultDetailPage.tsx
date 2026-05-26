@@ -184,10 +184,8 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
 
   const insufficientCollateral =
     hasDeposit &&
-    estimatedMusd === 0n &&
-    minBtcNeeded !== undefined &&
-    vaultBalance !== undefined &&
-    vaultBalance < minBtcNeeded;
+    risk.minNetDebt !== undefined &&
+    (estimatedMusd === 0n || estimatedMusd < risk.minNetDebt);
 
   const scenario: "active" | "ready" | "released" = released
     ? "released"
