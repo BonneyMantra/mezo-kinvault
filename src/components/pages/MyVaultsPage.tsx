@@ -164,9 +164,6 @@ export function MyVaultsPage({
     setCreateStatus("Step 1: Deploying vault contract...");
 
     try {
-      const { waitForTransactionReceipt } = await import("wagmi/actions");
-      const { getConfig } = await import("../../../src/lib/mezo");
-
       const factoryHash = await writeContractAsync({
         address: MEZO_ADDRESSES.factory,
         abi: FACTORY_ABI,
@@ -177,9 +174,7 @@ export function MyVaultsPage({
 
       setCreateStatus("Waiting for vault deployment confirmation...");
 
-      const config = (await import("wagmi")).useConfig ? undefined : undefined;
-
-      // Poll for receipt via fetch since we can't use wagmi actions easily
+      // Poll for receipt via fetch
       let createdAddr: string | null = null;
       let attempts = 0;
       while (!createdAddr && attempts < 30) {
