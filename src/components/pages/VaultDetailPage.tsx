@@ -269,9 +269,13 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     });
   };
   const doRelease = () => {
-    if (!releaseSim.data?.request) return;
     toast.loading("Releasing — opening MUSD trove...");
-    writeContract({ ...releaseSim.data.request, gas: 5_000_000n });
+    writeContract({
+      address: vaultAddress,
+      abi: KINVAULT_ABI,
+      functionName: "release",
+      gas: 10_000_000n,
+    });
   };
 
   const myBen = beneficiaries.find(
@@ -286,8 +290,7 @@ export function VaultDetailPage({ vaultAddress, meta, onBack }: Props) {
     !hasDeposit ||
     scenario !== "ready" ||
     insufficientGas ||
-    insufficientCollateral ||
-    !releaseSim.isSuccess;
+    insufficientCollateral;
 
   const releaseLabel = !hasDeposit
     ? "No BTC deposited"
