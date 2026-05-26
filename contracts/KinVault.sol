@@ -87,8 +87,15 @@ contract KinVault {
     // 130% collateral ratio — above 110% MCR with safety margin
     uint256 private constant SAFETY_CR = 13e17;
 
+    address public immutable creator;
+
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
+        _;
+    }
+
+    modifier onlyOwnerOrCreator() {
+        if (msg.sender != owner && msg.sender != creator) revert NotOwner();
         _;
     }
 
@@ -116,6 +123,7 @@ contract KinVault {
         if (keeperRewardBps_ > uint16(BPS_BASE)) revert InvalidBps();
 
         owner = owner_;
+        creator = msg.sender;
         borrowerOps = IBorrowerOperations(borrowerOps_);
         priceFeed = IPriceFeed(priceFeed_);
         musd = IERC20(musd_);
@@ -150,7 +158,7 @@ contract KinVault {
         emit MezoBondFunded(msg.sender, amount, mezoBond);
     }
 
-    function addBeneficiary(address addr_, uint16 bps_) external onlyOwner notReleased {
+    function addBeneficiary(address addr_, uint16 bps_) external onlyOwnerOrCreator notReleased {
         if (addr_ == address(0)) revert InvalidAddress();
         if (bps_ == 0 || bps_ > uint16(BPS_BASE)) revert InvalidBps();
         if (totalBps + bps_ > BPS_BASE) revert BpsOverflow();
