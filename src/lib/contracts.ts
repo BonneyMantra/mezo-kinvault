@@ -8,7 +8,7 @@ export const MEZO_ADDRESSES = {
   mezo: "0x7B7c000000000000000000000000000000000001" as `0x${string}`,
   // KinVault v4 — fresh empty vault for demo recording
   kinVault: "0xB0FC35262d8383bE97b90D01b3F5572007E7A10E" as `0x${string}`,
-  factory: "0x327343692c1f040c135317DEDbCda11Bd984A2c0" as `0x${string}`,
+  factory: "0x8a2936AF2e8f17F64f1c63a278cB2cF1D4FD7e7C" as `0x${string}`,
 } as const;
 
 export const KINVAULT_ABI = [

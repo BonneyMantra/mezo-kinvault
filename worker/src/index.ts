@@ -130,7 +130,7 @@ export default {
 
       try {
         // Step 1: Create vault via factory with user as owner
-        const FACTORY = "0x327343692c1f040c135317DEDbCda11Bd984A2c0";
+        const FACTORY = "0x8a2936AF2e8f17F64f1c63a278cB2cF1D4FD7e7C";
         const createData = encodeFunctionData({
           abi: [
             {
