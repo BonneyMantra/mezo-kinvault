@@ -80,6 +80,10 @@ const aiAssets = {
 const voiceoverAsset = "audio/kinvault-pitch-audio.mp3";
 const voiceoverPlaybackRate = 1;
 
+// Demo recording window — spans demo-explorer (66s) through demo-proof (170s)
+const DEMO_START = 66;
+const DEMO_DURATION = 104;
+
 const getScene = (id: string) => {
   const scene = scenes.find((item) => item.id === id);
   if (!scene) throw new Error(`Missing scene: ${id}`);
@@ -107,6 +111,24 @@ export const KinVaultPitch: React.FC<Props> = ({ mode }) => {
       }}
     >
       <PersistentFrame />
+      {/* Continuous demo recording across the demo window (66s–170s) */}
+      <Sequence from={DEMO_START * fps} durationInFrames={DEMO_DURATION * fps}>
+        <AbsoluteFill style={{ background: palette.ink }}>
+          <Video
+            src={staticFile("recordings/demo-full.mp4")}
+            muted
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              background:
+                "linear-gradient(180deg, rgba(8,9,11,0.45) 0%, transparent 22%, transparent 62%, rgba(8,9,11,0.85) 100%)",
+            }}
+          />
+        </AbsoluteFill>
+      </Sequence>
       {scenes.map((scene) => (
         <Sequence
           key={scene.id}
@@ -264,90 +286,94 @@ const FullscreenDemoScene: React.FC<{
   localFrame: number;
   totalFrames: number;
 }> = ({ scene, localFrame, totalFrames }) => {
-  const scan = interpolate(localFrame, [0, totalFrames], [0, 100], {
+  // Caption overlay only — the actual recording plays in the continuous
+  // Video sequence underneath. Fade the lower-third in and out.
+  const enter = interpolate(localFrame, [0, 12], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const pulse = interpolate(Math.sin(localFrame / 18), [-1, 1], [0.2, 0.72]);
+  const exit = interpolate(
+    localFrame,
+    [Math.max(0, totalFrames - 16), totalFrames],
+    [1, 0],
+    { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
+  );
+  const opacity = Math.min(enter, exit);
 
   return (
-    <AbsoluteFill style={fullscreenDemo}>
-      <div style={demoMockScreen}>
-        <div style={demoGrid} />
+    <AbsoluteFill style={{ pointerEvents: "none" }}>
+      {/* Top-left scene chip */}
+      <div
+        style={{
+          position: "absolute",
+          top: 56,
+          left: 64,
+          opacity,
+          display: "flex",
+          alignItems: "center",
+          gap: 12,
+          padding: "12px 22px",
+          borderRadius: 999,
+          background: "rgba(8,9,11,0.72)",
+          border: "1px solid rgba(255,255,255,0.12)",
+          backdropFilter: "blur(8px)",
+        }}
+      >
         <div
           style={{
-            position: "absolute",
-            left: `${scan}%`,
-            top: 0,
-            bottom: 0,
-            width: 3,
-            background: `rgba(51,227,159,${pulse})`,
+            width: 9,
+            height: 9,
+            borderRadius: "50%",
+            background: palette.musd,
           }}
         />
+        <span
+          style={{
+            fontSize: 22,
+            fontWeight: 700,
+            letterSpacing: "0.04em",
+            textTransform: "uppercase",
+            color: palette.text,
+          }}
+        >
+          {scene.kicker}
+        </span>
+      </div>
+
+      {/* Bottom lower-third caption */}
+      <div
+        style={{
+          position: "absolute",
+          left: 64,
+          right: 64,
+          bottom: 72,
+          opacity,
+        }}
+      >
         <div
           style={{
-            position: "absolute",
-            inset: 72,
-            border: `2px solid rgba(99,204,255,${pulse})`,
-            borderRadius: 8,
+            fontSize: 52,
+            fontWeight: 900,
+            lineHeight: 1.04,
+            letterSpacing: "-0.02em",
+            color: "#fff",
+            textShadow: "0 2px 24px rgba(0,0,0,0.7)",
           }}
-        />
-      </div>
-      <div style={demoOverlay}>
-        <div style={demoLabel}>
-          <div style={{ ...kicker, fontSize: 20 }}>{scene.kicker}</div>
-          <div
-            style={{
-              fontSize: 60,
-              fontWeight: 900,
-              lineHeight: 1.02,
-              marginTop: 12,
-            }}
-          >
-            Full-screen demo recording
-          </div>
-          <div
-            style={{
-              color: palette.muted,
-              fontSize: 25,
-              lineHeight: 1.32,
-              marginTop: 14,
-            }}
-          >
-            {scene.body}
-          </div>
+        >
+          {scene.title}
         </div>
-        <div style={demoFilename}>
-          <div style={{ color: palette.text, fontWeight: 820 }}>
-            Replace with
-          </div>
-          <div>{scene.slot}</div>
+        <div
+          style={{
+            fontSize: 26,
+            lineHeight: 1.35,
+            marginTop: 12,
+            maxWidth: 1100,
+            color: "rgba(255,255,255,0.82)",
+            textShadow: "0 2px 16px rgba(0,0,0,0.8)",
+          }}
+        >
+          {scene.caption}
         </div>
-      </div>
-      {scene.id === "owner-demo" && (
-        <div style={demoClarifier}>
-          <div style={{ color: palette.musd, fontWeight: 900 }}>
-            Check-in schedule
-          </div>
-          <div>
-            Demo: 60-second heartbeat. Real vault: monthly or quarterly
-            confirmation with reminders and a grace period.
-          </div>
-        </div>
-      )}
-      {scene.id === "release-demo" && (
-        <div style={demoClarifier}>
-          <div style={{ color: palette.warning, fontWeight: 900 }}>
-            Release rule
-          </div>
-          <div>
-            Release opens only after missed check-ins. Until then, beneficiaries
-            can review and rehearse, but cannot move funds.
-          </div>
-        </div>
-      )}
-      <div style={{ position: "absolute", left: 96, top: 84 }}>
-        <ProofRail />
       </div>
     </AbsoluteFill>
   );
