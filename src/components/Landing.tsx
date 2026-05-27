@@ -8,7 +8,6 @@ import {
   Shield,
   Users,
 } from "lucide-react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { mezoLinks } from "../lib/mezo";
 import { useBtcPrice } from "../hooks/useBtcPrice";
 import { useKinVaultState } from "../hooks/useKinVault";
@@ -37,7 +36,12 @@ const steps = [
   },
 ];
 
-export function Landing() {
+interface LandingProps {
+  onConnect: () => void;
+  connecting: boolean;
+}
+
+export function Landing({ onConnect, connecting }: LandingProps) {
   const { price: btcPrice } = useBtcPrice();
   const vault = useKinVaultState();
   const [scrolled, setScrolled] = useState(false);
@@ -81,18 +85,14 @@ export function Landing() {
           >
             GitHub
           </a>
-          <ConnectButton.Custom>
-            {({ openConnectModal }) => (
-              <button
-                className="landingConnectBtn"
-                type="button"
-                onClick={openConnectModal}
-              >
-                Launch App
-                <ArrowRight size={16} />
-              </button>
-            )}
-          </ConnectButton.Custom>
+          <button
+            className="landingConnectBtn"
+            type="button"
+            onClick={onConnect}
+          >
+            {connecting ? "Connecting…" : "Launch App"}
+            <ArrowRight size={16} />
+          </button>
         </div>
       </nav>
 
@@ -157,20 +157,16 @@ export function Landing() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.55, ease }}
           >
-            <ConnectButton.Custom>
-              {({ openConnectModal }) => (
-                <motion.button
-                  className="ctaPrimary"
-                  type="button"
-                  onClick={openConnectModal}
-                  whileHover={{ scale: 1.03 }}
-                  whileTap={{ scale: 0.97 }}
-                >
-                  <Send size={18} />
-                  Connect Wallet
-                </motion.button>
-              )}
-            </ConnectButton.Custom>
+            <motion.button
+              className="ctaPrimary"
+              type="button"
+              onClick={onConnect}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <Send size={18} />
+              {connecting ? "Connecting…" : "Connect Wallet"}
+            </motion.button>
             <a
               className="ctaSecondary"
               href={mezoLinks.hackathon}
